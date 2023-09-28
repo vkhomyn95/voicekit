@@ -529,26 +529,28 @@ bool GRPCSTT::Run(int &error_status, std::string &error_message)
 				if (pfds[0].revents & POLLIN)
 					break;
 
-//				if (!(pfds[1].revents & POLLIN)) {
-//					struct timespec current_moment;
-//					clock_gettime(CLOCK_MONOTONIC_RAW, &current_moment);
-//					int gap_samples = aligned_samples(delta_samples(&current_moment, &last_frame_moment) - MAX_FRAME_SAMPLES);
-//					if (gap_samples > 0) {
-//						tinkoff::cloud::stt::v1::StreamingRecognizeRequest request;
-//						std::vector<uint8_t> buffer = make_silence_samples(frame_format, gap_samples);
-//						request.set_audio_content(buffer.data(), buffer.size());
-//						if (!stream->Write(request))
-//							stream_valid = false;
-//						time_add_samples(&last_frame_moment, gap_samples);
-//					}
-//					continue;
-//				}
+				if (!(pfds[1].revents & POLLIN)) {
+					struct timespec current_moment;
+					clock_gettime(CLOCK_MONOTONIC_RAW, &current_moment);
+					int gap_samples = aligned_samples(delta_samples(&current_moment, &last_frame_moment) - MAX_FRAME_SAMPLES);
+					if (gap_samples > 0) {
+						tinkoff::cloud::stt::v1::StreamingRecognizeRequest request;
+						std::vector<uint8_t> buffer;
+                        size_t len = 0;
+                        const char *data = get_frame_samples(f, frame_format, buffer, &len, &warned);
+                        if (data) {
+                            time_add_samples(&last_frame_moment, f->samples);
+                            request.set_audio_content(data, len);
+                            if (!stream->Write(request))
+                                stream_valid = false;
+                        }
+					}
+					continue;
+				}
 
 				eventfd_skip(frame_event_fd);
 
 				bool gap_handled = false;
-				stream_valid = true;
-				gap_handled = true;
 				while (stream_valid) {
 					AST_LIST_LOCK(&audio_frames);
 					struct ast_frame *f = AST_LIST_REMOVE_HEAD(&audio_frames, frame_list);
@@ -563,11 +565,15 @@ bool GRPCSTT::Run(int &error_status, std::string &error_message)
 							int gap_samples = aligned_samples(delta_samples(&current_moment, &last_frame_moment) - f->samples);
 							if (gap_samples > 0) {
 								tinkoff::cloud::stt::v1::StreamingRecognizeRequest request;
-								std::vector<uint8_t> buffer = make_silence_samples(frame_format, gap_samples);
-								request.set_audio_content(buffer.data(), buffer.size());
-								if (!stream->Write(request))
-									stream_valid = false;
-								time_add_samples(&last_frame_moment, gap_samples);
+								std::vector<uint8_t> buffer;
+                                size_t len = 0;
+                                const char *data = get_frame_samples(f, frame_format, buffer, &len, &warned);
+                                if (data) {
+                                    time_add_samples(&last_frame_moment, f->samples);
+                                    request.set_audio_content(data, len);
+                                    if (!stream->Write(request))
+                                        stream_valid = false;
+                                }
 							}
 							gap_handled = true;
 						}
