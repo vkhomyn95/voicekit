@@ -512,6 +512,8 @@ bool GRPCSTT::Run(int &error_status, std::string &error_message)
 			bool warned = false;
 			struct timespec last_frame_moment;
 			clock_gettime(CLOCK_MONOTONIC_RAW, &last_frame_moment);
+			error_message = "GRPC CODE DEBUG 0";
+            ast_log(AST_LOG_DEBUG, "%s\n", error_message.c_str());
 			while (stream_valid && !ast_check_hangup_locked(chan)) {
 				struct pollfd pfds[2] = {
 					{
@@ -529,21 +531,23 @@ bool GRPCSTT::Run(int &error_status, std::string &error_message)
 				if (pfds[0].revents & POLLIN)
 					break;
 
+                error_message = "GRPC CODE DEBUG 1";
+                ast_log(AST_LOG_DEBUG, "%s\n", error_message.c_str());
 				if (!(pfds[1].revents & POLLIN)) {
+				    error_message = "GRPC CODE DEBUG 2";
+                    ast_log(AST_LOG_DEBUG, "%s\n", error_message.c_str());
 					struct timespec current_moment;
 					clock_gettime(CLOCK_MONOTONIC_RAW, &current_moment);
 					int gap_samples = aligned_samples(delta_samples(&current_moment, &last_frame_moment) - MAX_FRAME_SAMPLES);
 					if (gap_samples > 0) {
+					    error_message = "GRPC CODE DEBUG 3";
+                        ast_log(AST_LOG_DEBUG, "%s\n", error_message.c_str());
 						tinkoff::cloud::stt::v1::StreamingRecognizeRequest request;
-						std::vector<uint8_t> buffer;
-                        size_t len = 0;
-                        const char *data = get_frame_samples(f, frame_format, buffer, &len, &warned);
-                        if (data) {
-                            time_add_samples(&last_frame_moment, f->samples);
-                            request.set_audio_content(data, len);
-                            if (!stream->Write(request))
-                                stream_valid = false;
-                        }
+						std::vector<uint8_t> buffer = make_silence_samples(frame_format, gap_samples);
+						request.set_audio_content(buffer.data(), buffer.size());
+						if (!stream->Write(request))
+							stream_valid = false;
+						time_add_samples(&last_frame_moment, gap_samples);
 					}
 					continue;
 				}
@@ -561,19 +565,21 @@ bool GRPCSTT::Run(int &error_status, std::string &error_message)
 					if (f->frametype == AST_FRAME_VOICE) {
 						struct timespec current_moment;
 						clock_gettime(CLOCK_MONOTONIC_RAW, &current_moment);
+						error_message = "GRPC CODE DEBUG 4";
+                        ast_log(AST_LOG_DEBUG, "%s\n", error_message.c_str());
 						if (!gap_handled) {
+						    error_message = "GRPC CODE DEBUG 5";
+                            ast_log(AST_LOG_DEBUG, "%s\n", error_message.c_str());
 							int gap_samples = aligned_samples(delta_samples(&current_moment, &last_frame_moment) - f->samples);
 							if (gap_samples > 0) {
+							    error_message = "GRPC CODE DEBUG 6";
+                                ast_log(AST_LOG_DEBUG, "%s\n", error_message.c_str());
 								tinkoff::cloud::stt::v1::StreamingRecognizeRequest request;
-								std::vector<uint8_t> buffer;
-                                size_t len = 0;
-                                const char *data = get_frame_samples(f, frame_format, buffer, &len, &warned);
-                                if (data) {
-                                    time_add_samples(&last_frame_moment, f->samples);
-                                    request.set_audio_content(data, len);
-                                    if (!stream->Write(request))
-                                        stream_valid = false;
-                                }
+								std::vector<uint8_t> buffer = make_silence_samples(frame_format, gap_samples);
+								request.set_audio_content(buffer.data(), buffer.size());
+								if (!stream->Write(request))
+									stream_valid = false;
+								time_add_samples(&last_frame_moment, gap_samples);
 							}
 							gap_handled = true;
 						}
@@ -582,7 +588,11 @@ bool GRPCSTT::Run(int &error_status, std::string &error_message)
 						std::vector<uint8_t> buffer;
 						size_t len = 0;
 						const char *data = get_frame_samples(f, frame_format, buffer, &len, &warned);
+						error_message = "GRPC CODE DEBUG 7";
+                        ast_log(AST_LOG_DEBUG, "%s\n", error_message.c_str());
 						if (data) {
+						    error_message = "GRPC CODE DEBUG 8";
+                            ast_log(AST_LOG_DEBUG, "%s\n", error_message.c_str());
 							time_add_samples(&last_frame_moment, f->samples);
 							request.set_audio_content(data, len);
 							if (!stream->Write(request))
