@@ -547,6 +547,7 @@ bool GRPCSTT::Run(int &error_status, std::string &error_message)
 				eventfd_skip(frame_event_fd);
 
 				bool gap_handled = false;
+				stream_valid = true;
 				while (stream_valid) {
 					AST_LIST_LOCK(&audio_frames);
 					struct ast_frame *f = AST_LIST_REMOVE_HEAD(&audio_frames, frame_list);
