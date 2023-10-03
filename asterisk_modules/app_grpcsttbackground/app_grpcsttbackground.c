@@ -95,7 +95,7 @@ extern struct ast_module *AST_MODULE_SELF_SYM(void);
 			<para>Upon each recieved recognized phrase a channel user event is generated wich may be catched with WaitEvent() application or AMI subsystem.</para>
 			<para>Following events are generated (event body is specified inside braces):</para>
 			<para><emphasis>At receiving heading metafields of STT session &quot;GRPCSTT_X_REQUEST_ID(X_REQUEST_ID)&quot; event is generated.</emphasis></para>
-			<para><emphasis>At receiving STT recognition hypothesis &quot;GRPCSTT_ASCII(JSON)&quot; and &quot;GRPCSTT_UTF8(JSON)&quot; events are generated.</emphasis></para>
+			<para><emphasis>At receiving STT recognition hypothesis &quot;GRPCSTTASCII(JSON)&quot; and &quot;GRPCSTTUTF8(JSON)&quot; events are generated.</emphasis></para>
 			<para><emphasis>At session close an &quot;GRPCSTT_SESSION_FINISHED(STATUS,ERROR_CODE,ERROR_MESSAGE)&quot; event is generated.</emphasis></para>
 			<example title="Start streaming to STT at domain.org:300 with TLS and A-Law sample format">
 			 GRPCSTTBackground(domain.org:300,S,,alaw);

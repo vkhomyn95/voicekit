@@ -142,7 +142,7 @@ static std::string build_grpcstt_event(const tinkoff::cloud::stt::v1::StreamingR
 }
 static void push_grpcstt_event(struct ast_channel *chan, const std::string &data, bool ensure_ascii)
 {
-	struct ast_json *blob = ast_json_pack("{s: s, s: s}", "eventname", (ensure_ascii ? "GRPCSTT_ASCII" : "GRPCSTT_UTF8"), "eventbody", data.c_str());
+	struct ast_json *blob = ast_json_pack("{s: s, s: s}", "eventname", (ensure_ascii ? "GRPCSTTASCII" : "GRPCSTTUTF8"), "eventbody", data.c_str());
 	if (!blob)
 		return;
 
