@@ -1,9 +1,6 @@
 /*
  * Asterisk VoiceKit modules
  *
- * Copyright (c) JSC Tinkoff Bank, 2018 - 2019
- *
- * Grigoriy Okopnik <g.e.okopnik@tinkoff.ru>
  *
  * See http://www.asterisk.org for more information about
  * the Asterisk project. Please do not directly contact
@@ -61,19 +58,19 @@ extern "C" void grpctts_channel_destroy(struct grpctts_channel *channel)
 }
 extern "C" struct grpctts_job *grpctts_channel_start_job(struct grpctts_channel *channel, const struct grpctts_job_conf *job_conf, const struct grpctts_job_input *job_input)
 {
-	enum tinkoff::cloud::tts::v1::SsmlVoiceGender ssml_gender = tinkoff::cloud::tts::v1::SSML_VOICE_GENDER_UNSPECIFIED;
+	enum voiptime::cloud::tts::v1::SsmlVoiceGender ssml_gender = voiptime::cloud::tts::v1::SSML_VOICE_GENDER_UNSPECIFIED;
 	switch (job_conf->voice_gender) {
 	case GRPCTTS_VOICE_GENDER_UNSPECIFIED:
-		ssml_gender = tinkoff::cloud::tts::v1::SSML_VOICE_GENDER_UNSPECIFIED;
+		ssml_gender = voiptime::cloud::tts::v1::SSML_VOICE_GENDER_UNSPECIFIED;
 		break;
 	case GRPCTTS_VOICE_GENDER_MALE:
-		ssml_gender = tinkoff::cloud::tts::v1::MALE;
+		ssml_gender = voiptime::cloud::tts::v1::MALE;
 		break;
 	case GRPCTTS_VOICE_GENDER_FEMALE:
-		ssml_gender = tinkoff::cloud::tts::v1::FEMALE;
+		ssml_gender = voiptime::cloud::tts::v1::FEMALE;
 		break;
 	case GRPCTTS_VOICE_GENDER_NEUTRAL:
-		ssml_gender = tinkoff::cloud::tts::v1::NEUTRAL;
+		ssml_gender = voiptime::cloud::tts::v1::NEUTRAL;
 	}
 	return (struct grpctts_job *) ((GRPCTTS::Channel *) channel)->StartJob(
 		job_conf->speaking_rate, job_conf->pitch, job_conf->volume_gain_db,

@@ -1,10 +1,6 @@
 /*
  * Asterisk VoiceKit modules
  *
- * Copyright (c) JSC Tinkoff Bank, 2018 - 2019
- *
- * Grigoriy Okopnik <g.e.okopnik@tinkoff.ru>
- *
  * See http://www.asterisk.org for more information about
  * the Asterisk project. Please do not directly contact
  * any of the maintainers of this project for assistance;

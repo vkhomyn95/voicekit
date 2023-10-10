@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package tinkoff.cloud.stt.v1;
+package voiptime.cloud.stt.v1;
 
 import "google/protobuf/duration.proto";
 import "google/api/annotations.proto";
@@ -35,7 +35,7 @@ enum AudioEncoding { // Audio encoding. Defines both codec and container.
 message RecognitionAudio { // Audio to recognize.
   oneof audio_source {
     bytes content = 1; // Input audio data chunk.
-    string uri = 2; // Currently only supported for LongRunningRecognizeRequest. Input audio URI.<br/>URI format is ```storage://s3.api.tinkoff.ai/inbound/<file_name>```
+    string uri = 2; // Currently only supported for LongRunningRecognizeRequest. Input audio URI.<br/>URI format is
   }
 }
 
@@ -125,6 +125,8 @@ message RecognizeResponse { // Response with recognized phrases using Recognize 
 message InterimResultsConfig { // Configuration of interim results.
   bool enable_interim_results = 1; // Flag to enable sending interim results. Disabled by default.
   float interval = 2; // Desired interval in seconds for sending interim results. Actual interval between interim results depends on service internals and is selected for optimal give out of relevant data.
+  uint32 max_predictions = 3;
+  string prediction_criteria = 4;
 }
 
 message StreamingRecognitionConfig { // Recognition configuration using StreamingRecognition method. Must be sent as first message only.

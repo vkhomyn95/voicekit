@@ -1,9 +1,6 @@
 /*
  * Asterisk VoiceKit modules
  *
- * Copyright (c) JSC Tinkoff Bank, 2018 - 2019
- *
- * Grigoriy Okopnik <g.e.okopnik@tinkoff.ru>
  *
  * See http://www.asterisk.org for more information about
  * the Asterisk project. Please do not directly contact
@@ -108,13 +105,13 @@ static json_t *build_json_gender_identification_result(const float male_proba, c
 	json_object_set_new_nocheck(json_gender_identification, "female_proba", json_real(female_proba));
 	return json_gender_identification;
 }
-static std::string build_grpcstt_event(const tinkoff::cloud::stt::v1::StreamingRecognitionResult &stream_result, bool json_ensure_ascii)
+static std::string build_grpcstt_event(const voiptime::cloud::stt::v1::StreamingRecognitionResult &stream_result, bool json_ensure_ascii)
 {
-	const tinkoff::cloud::stt::v1::SpeechRecognitionResult &recognition_result = stream_result.recognition_result();
+	const voiptime::cloud::stt::v1::SpeechRecognitionResult &recognition_result = stream_result.recognition_result();
 	json_t *json_root = json_object();
 	{
 		json_t *json_alternatives = json_array();
-		for (const tinkoff::cloud::stt::v1::SpeechRecognitionAlternative &alternative: recognition_result.alternatives()) {
+		for (const voiptime::cloud::stt::v1::SpeechRecognitionAlternative &alternative: recognition_result.alternatives()) {
 			json_t *json_alternative = json_object();
 			json_object_set_new_nocheck(json_alternative, "transcript", json_string(alternative.transcript().c_str()));
 			json_object_set_new_nocheck(json_alternative, "confidence", json_real(alternative.confidence()));
@@ -127,7 +124,7 @@ static std::string build_grpcstt_event(const tinkoff::cloud::stt::v1::StreamingR
 	json_object_set_new_nocheck(json_root, "start_time", build_json_duration(recognition_result.start_time()));
 	json_object_set_new_nocheck(json_root, "end_time", build_json_duration(recognition_result.end_time()));
 
-	const tinkoff::cloud::stt::v1::SpeechGenderIdentificationResult &gender_identification_result = recognition_result.gender_identification_result();
+	const voiptime::cloud::stt::v1::SpeechGenderIdentificationResult &gender_identification_result = recognition_result.gender_identification_result();
 	const float male_proba = gender_identification_result.male_proba();
 	const float female_proba = gender_identification_result.female_proba();
 	if (!(male_proba == 0 && female_proba == 0)) {
@@ -303,7 +300,8 @@ public:
 		const char *language_code, int max_alternatives, enum grpc_stt_frame_format frame_format,
 		bool vad_disable, double vad_min_speech_duration, double vad_max_speech_duration,
 		double vad_silence_duration_threshold, double vad_silence_prob_threshold, double vad_aggressiveness,
-		bool interim_results_enable, double interim_results_interval, bool enable_gender_identification);
+		bool interim_results_enable, double interim_results_interval, int interim_results_max_predictions,
+		const char *interim_results_prediction_criteria, bool enable_gender_identification);
 	~GRPCSTT();
 	void ReapAudioFrame(struct ast_frame *frame);
 	void Terminate() noexcept;
@@ -311,7 +309,7 @@ public:
 
 private:
 	int terminate_event_fd;
-	std::unique_ptr<tinkoff::cloud::stt::v1::SpeechToText::Stub> stt_stub;
+	std::unique_ptr<voiptime::cloud::stt::v1::SpeechToText::Stub> stt_stub;
 	std::string authorization_api_key;
 	std::string authorization_secret_key;
 	std::string authorization_issuer;
@@ -332,6 +330,8 @@ private:
 	double vad_aggressiveness;
 	bool interim_results_enable;
 	double interim_results_interval;
+	int interim_results_max_predictions,
+	std::string interim_results_prediction_criteria,
 	bool enable_gender_identification;
 };
 
@@ -384,14 +384,17 @@ GRPCSTT::GRPCSTT(int terminate_event_fd, std::shared_ptr<grpc::Channel> grpc_cha
 		 struct ast_channel *chan, const char *language_code, int max_alternatives, enum grpc_stt_frame_format frame_format,
 		 bool vad_disable, double vad_min_speech_duration, double vad_max_speech_duration,
 		 double vad_silence_duration_threshold, double vad_silence_prob_threshold, double vad_aggressiveness,
-		 bool interim_results_enable, double interim_results_interval, bool enable_gender_identification)
-	: terminate_event_fd(terminate_event_fd), stt_stub(tinkoff::cloud::stt::v1::SpeechToText::NewStub(grpc_channel)),
+		 bool interim_results_enable, double interim_results_interval, int interim_results_max_predictions,
+		 const char *interim_results_prediction_criteria, bool enable_gender_identification)
+	: terminate_event_fd(terminate_event_fd), stt_stub(voiptime::cloud::stt::v1::SpeechToText::NewStub(grpc_channel)),
 	authorization_api_key(authorization_api_key), authorization_secret_key(authorization_secret_key),
 	authorization_issuer(authorization_issuer), authorization_subject(authorization_subject), authorization_audience(authorization_audience),
 	chan(chan), language_code(language_code), max_alternatives(max_alternatives), frame_format(frame_format), framehook_id(-1),
 	vad_disable(vad_disable), vad_min_speech_duration(vad_min_speech_duration), vad_max_speech_duration(vad_max_speech_duration),
 	vad_silence_duration_threshold(vad_silence_duration_threshold), vad_silence_prob_threshold(vad_silence_prob_threshold), vad_aggressiveness(vad_aggressiveness),
-	interim_results_enable(interim_results_enable), interim_results_interval(interim_results_interval), enable_gender_identification(enable_gender_identification)
+	interim_results_enable(interim_results_enable), interim_results_interval(interim_results_interval),
+	interim_results_max_predictions(interim_results_max_predictions), interim_results_prediction_criteria(interim_results_prediction_criteria),
+	enable_gender_identification(enable_gender_identification)
 {
 	frame_event_fd = eventfd(0, 0);
 	fcntl(frame_event_fd, F_SETFL, fcntl(frame_event_fd, F_GETFL) | O_NONBLOCK);
@@ -440,8 +443,8 @@ bool GRPCSTT::Run(int &error_status, std::string &error_message)
 		context.AddMetadata("authorization", jwt);
 	}
 
-	std::shared_ptr<grpc::ClientReaderWriter<tinkoff::cloud::stt::v1::StreamingRecognizeRequest,
-						 tinkoff::cloud::stt::v1::StreamingRecognizeResponse>> stream(stt_stub->StreamingRecognize(&context));
+	std::shared_ptr<grpc::ClientReaderWriter<voiptime::cloud::stt::v1::StreamingRecognizeRequest,
+						 voiptime::cloud::stt::v1::StreamingRecognizeResponse>> stream(stt_stub->StreamingRecognize(&context));
 
 
 	try {
@@ -449,19 +452,19 @@ bool GRPCSTT::Run(int &error_status, std::string &error_message)
 			[stream, this]()
 			{
 				{
-					tinkoff::cloud::stt::v1::StreamingRecognizeRequest initial_request;
-					tinkoff::cloud::stt::v1::StreamingRecognitionConfig *streaming_recognition_config = initial_request.mutable_streaming_config();
+					voiptime::cloud::stt::v1::StreamingRecognizeRequest initial_request;
+					voiptime::cloud::stt::v1::StreamingRecognitionConfig *streaming_recognition_config = initial_request.mutable_streaming_config();
 					{
-						tinkoff::cloud::stt::v1::RecognitionConfig *recognition_config = streaming_recognition_config->mutable_config();
+						voiptime::cloud::stt::v1::RecognitionConfig *recognition_config = streaming_recognition_config->mutable_config();
 						switch (frame_format) {
 						case GRPC_STT_FRAME_FORMAT_SLINEAR16:
-							recognition_config->set_encoding(tinkoff::cloud::stt::v1::LINEAR16);
+							recognition_config->set_encoding(voiptime::cloud::stt::v1::LINEAR16);
 							break;
 						case GRPC_STT_FRAME_FORMAT_MULAW:
-							recognition_config->set_encoding(tinkoff::cloud::stt::v1::MULAW);
+							recognition_config->set_encoding(voiptime::cloud::stt::v1::MULAW);
 							break;
 						default:
-							recognition_config->set_encoding(tinkoff::cloud::stt::v1::ALAW);
+							recognition_config->set_encoding(voiptime::cloud::stt::v1::ALAW);
 						}
 						recognition_config->set_sample_rate_hertz(INTERNAL_SAMPLE_RATE);
 						recognition_config->set_num_channels(1);
@@ -471,7 +474,7 @@ bool GRPCSTT::Run(int &error_status, std::string &error_message)
 						if (vad_disable) {
 							recognition_config->set_do_not_perform_vad(true);
 						} else {
-							tinkoff::cloud::stt::v1::VoiceActivityDetectionConfig *vad_config = recognition_config->mutable_vad_config();
+							voiptime::cloud::stt::v1::VoiceActivityDetectionConfig *vad_config = recognition_config->mutable_vad_config();
 							vad_config->set_min_speech_duration(vad_min_speech_duration);
 							vad_config->set_max_speech_duration(vad_max_speech_duration);
 							vad_config->set_silence_duration_threshold(vad_silence_duration_threshold);
@@ -481,9 +484,11 @@ bool GRPCSTT::Run(int &error_status, std::string &error_message)
 						recognition_config->set_enable_gender_identification(enable_gender_identification);
 					}
 					{
-						tinkoff::cloud::stt::v1::InterimResultsConfig *interim_results_config = streaming_recognition_config->mutable_interim_results_config();
+						voiptime::cloud::stt::v1::InterimResultsConfig *interim_results_config = streaming_recognition_config->mutable_interim_results_config();
 						interim_results_config->set_enable_interim_results(interim_results_enable);
 						interim_results_config->set_interval(interim_results_interval);
+						interim_results_config->set_max_predictions(interim_results_max_predictions);
+						interim_results_config->set_prediction_criteria(interim_results_prediction_criteria);
 					}
 					stream->Write(initial_request);
 				}
@@ -534,7 +539,7 @@ bool GRPCSTT::Run(int &error_status, std::string &error_message)
 					clock_gettime(CLOCK_MONOTONIC_RAW, &current_moment);
 					int gap_samples = aligned_samples(delta_samples(&current_moment, &last_frame_moment) - MAX_FRAME_SAMPLES);
 					if (gap_samples > 0) {
-						tinkoff::cloud::stt::v1::StreamingRecognizeRequest request;
+						voiptime::cloud::stt::v1::StreamingRecognizeRequest request;
 						std::vector<uint8_t> buffer = make_silence_samples(frame_format, gap_samples);
 						request.set_audio_content(buffer.data(), buffer.size());
 						if (!stream->Write(request))
@@ -560,7 +565,7 @@ bool GRPCSTT::Run(int &error_status, std::string &error_message)
 						if (!gap_handled) {
 							int gap_samples = aligned_samples(delta_samples(&current_moment, &last_frame_moment) - f->samples);
 							if (gap_samples > 0) {
-								tinkoff::cloud::stt::v1::StreamingRecognizeRequest request;
+								voiptime::cloud::stt::v1::StreamingRecognizeRequest request;
 								std::vector<uint8_t> buffer = make_silence_samples(frame_format, gap_samples);
 								request.set_audio_content(buffer.data(), buffer.size());
 								if (!stream->Write(request))
@@ -570,7 +575,7 @@ bool GRPCSTT::Run(int &error_status, std::string &error_message)
 							gap_handled = true;
 						}
 
-						tinkoff::cloud::stt::v1::StreamingRecognizeRequest request;
+						voiptime::cloud::stt::v1::StreamingRecognizeRequest request;
 						std::vector<uint8_t> buffer;
 						size_t len = 0;
 						const char *data = get_frame_samples(f, frame_format, buffer, &len, &warned);
@@ -591,9 +596,9 @@ bool GRPCSTT::Run(int &error_status, std::string &error_message)
 	);
 
 	try {
-		tinkoff::cloud::stt::v1::StreamingRecognizeResponse response;
+		voiptime::cloud::stt::v1::StreamingRecognizeResponse response;
 		while (stream->Read(&response)) {
-			for (const tinkoff::cloud::stt::v1::StreamingRecognitionResult &stream_result: response.results()) {
+			for (const voiptime::cloud::stt::v1::StreamingRecognitionResult &stream_result: response.results()) {
 				push_grpcstt_event(chan, build_grpcstt_event(stream_result, false), false);
 				push_grpcstt_event(chan, build_grpcstt_event(stream_result, true), true);
 			}
@@ -629,7 +634,8 @@ extern "C" void grpc_stt_run(int terminate_event_fd, const char *endpoint, const
 			     const char *language_code, int max_alternatives, enum grpc_stt_frame_format frame_format,
 			     int vad_disable, double vad_min_speech_duration, double vad_max_speech_duration,
 			     double vad_silence_duration_threshold, double vad_silence_prob_threshold, double vad_aggressiveness,
-			     int interim_results_enable, double interim_results_interval, int enable_gender_identification)
+			     int interim_results_enable, double interim_results_interval, int interim_results_max_predictions,
+			     const *char interim_results_prediction_criteria, int enable_gender_identification)
 {
 	bool success = false;
 	int error_status;
@@ -647,7 +653,8 @@ extern "C" void grpc_stt_run(int terminate_event_fd, const char *endpoint, const
 			chan, (language_code ? language_code : ""), max_alternatives, frame_format,
 			vad_disable, vad_min_speech_duration, vad_max_speech_duration,
 			vad_silence_duration_threshold, vad_silence_prob_threshold, vad_aggressiveness,
-			interim_results_enable, interim_results_interval, enable_gender_identification
+			interim_results_enable, interim_results_interval, interim_results_max_predictions,
+			interim_results_prediction_criteria, enable_gender_identification
 		);
 #undef NON_NULL_STRING
 		GRPCSTT::AttachToChannel(grpc_stt);

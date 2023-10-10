@@ -43,7 +43,7 @@ issuer=issuer
 subject=subject
 
 ;Set audience for authorization. Default: ""
-audience=tinkoff.cloud.tts
+audience=voiptime.cloud.tts
 
 
 [buffering]

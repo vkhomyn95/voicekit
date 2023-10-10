@@ -1,9 +1,6 @@
 /*
  * Asterisk VoiceKit modules
  *
- * Copyright (c) JSC Tinkoff Bank, 2018 - 2019
- *
- * Grigoriy Okopnik <g.e.okopnik@tinkoff.ru>
  *
  * See http://www.asterisk.org for more information about
  * the Asterisk project. Please do not directly contact
@@ -53,6 +50,8 @@ extern void grpc_stt_run(
 	double vad_aggressiveness,
 	int interim_results_enable,
 	double interim_results_interval,
+	int interim_results_max_predictions,
+	const *char interim_results_prediction_criteria,
 	int enable_gender_identification);
 
 #ifdef __cplusplus

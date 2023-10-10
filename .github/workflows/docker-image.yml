@@ -18,5 +18,5 @@ jobs:
     - name: Build and push Docker image
       run: |
         IMAGE_VERSION=$(git describe --tags)
-        docker build . --tag tinkoffcreditsystems/asterisk-voicekit-modules:"${IMAGE_VERSION}"
-        docker push tinkoffcreditsystems/asterisk-voicekit-modules:"${IMAGE_VERSION}"
+        docker build . --tag voiptimecreditsystems/asterisk-voicekit-modules:"${IMAGE_VERSION}"
+        docker push voiptimecreditsystems/asterisk-voicekit-modules:"${IMAGE_VERSION}"

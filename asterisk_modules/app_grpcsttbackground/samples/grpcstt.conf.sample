@@ -48,6 +48,12 @@ enable=true
 ;Interim results interval. Default: settings at Speech-To-Text server
 interval=3
 
+;Interim results predictions number before connections will close. If  interim disabled prediction will be always final
+max_predictions=2
+
+;Interim results predictions criteria. Only if interim enabled
+prediction_criteria=(<human, human | human>, <answering_machine, human | human>)
+
 [gender_identification]
 
 ;Enable gender identification. Default: no
@@ -68,4 +74,4 @@ issuer=issuer
 subject=subject
 
 ;Set audience for authorization. Default: ""
-audience=tinkoff.cloud.stt
+audience=voiptime.cloud.stt

@@ -1,10 +1,6 @@
 /*
  * Asterisk VoiceKit modules
  *
- * Copyright (c) JSC Tinkoff Bank, 2018 - 2019
- *
- * Grigoriy Okopnik <g.e.okopnik@tinkoff.ru>
- *
  * See http://www.asterisk.org for more information about
  * the Asterisk project. Please do not directly contact
  * any of the maintainers of this project for assistance;
@@ -52,7 +48,7 @@ namespace GRPCTTS {
 
 static void thread_routine(std::shared_ptr<ChannelBackend> channel_backend,
 			   double speaking_rate, double pitch, double volume_gain_db,
-			   const std::string &voice_language_code, const std::string &voice_name, enum tinkoff::cloud::tts::v1::SsmlVoiceGender ssml_gender,
+			   const std::string &voice_language_code, const std::string &voice_name, enum voiptime::cloud::tts::v1::SsmlVoiceGender ssml_gender,
 			   enum grpctts_frame_format remote_frame_format,
 			   const std::string &text, const std::string &ssml, std::shared_ptr<ByteQueue> byte_queue)
 {
@@ -92,11 +88,11 @@ static void thread_routine(std::shared_ptr<ChannelBackend> channel_backend,
 	std::string auth_token(channel_backend->BuildAuthToken());
 	if (auth_token.length())
 		context.AddMetadata("authorization", auth_token);
-	std::unique_ptr<tinkoff::cloud::tts::v1::TextToSpeech::Stub> tts_stub = tinkoff::cloud::tts::v1::TextToSpeech::NewStub(grpc_channel);
-	tinkoff::cloud::tts::v1::SynthesizeSpeechRequest request;
+	std::unique_ptr<voiptime::cloud::tts::v1::TextToSpeech::Stub> tts_stub = voiptime::cloud::tts::v1::TextToSpeech::NewStub(grpc_channel);
+	voiptime::cloud::tts::v1::SynthesizeSpeechRequest request;
 
 	if (text.size() || ssml.size()) {
-		tinkoff::cloud::tts::v1::SynthesisInput *input = request.mutable_input();
+		voiptime::cloud::tts::v1::SynthesisInput *input = request.mutable_input();
 		if (text.size()) {
 			input->set_text(text);
 		}
@@ -105,19 +101,19 @@ static void thread_routine(std::shared_ptr<ChannelBackend> channel_backend,
 		}
 	}
 	{
-		tinkoff::cloud::tts::v1::VoiceSelectionParams *voice = request.mutable_voice();
+		voiptime::cloud::tts::v1::VoiceSelectionParams *voice = request.mutable_voice();
 		voice->set_language_code(voice_language_code);
 		voice->set_name(voice_name);
 		voice->set_ssml_gender(ssml_gender);
 	}
 	{
-		tinkoff::cloud::tts::v1::AudioConfig *audio_config = request.mutable_audio_config();
+		voiptime::cloud::tts::v1::AudioConfig *audio_config = request.mutable_audio_config();
 		switch (remote_frame_format) {
 		case GRPCTTS_FRAME_FORMAT_OPUS:
-			audio_config->set_audio_encoding(tinkoff::cloud::tts::v1::RAW_OPUS);
+			audio_config->set_audio_encoding(voiptime::cloud::tts::v1::RAW_OPUS);
 			break;
 		default:
-			audio_config->set_audio_encoding(tinkoff::cloud::tts::v1::LINEAR16);
+			audio_config->set_audio_encoding(voiptime::cloud::tts::v1::LINEAR16);
 		}
 		if (remote_frame_format == GRPCTTS_FRAME_FORMAT_OPUS) {
 			int error;
@@ -133,7 +129,7 @@ static void thread_routine(std::shared_ptr<ChannelBackend> channel_backend,
 		// audio_config->set_volume_gain_db(volume_gain_db); - ingore for now
 		audio_config->set_sample_rate_hertz(CHANNEL_FRAME_SAMPLE_RATE);
 	}
-	std::unique_ptr<grpc::ClientReader<tinkoff::cloud::tts::v1::StreamingSynthesizeSpeechResponse>> stream = tts_stub->StreamingSynthesize(&context, request);
+	std::unique_ptr<grpc::ClientReader<voiptime::cloud::tts::v1::StreamingSynthesizeSpeechResponse>> stream = tts_stub->StreamingSynthesize(&context, request);
 	stream->WaitForInitialMetadata();
 	std::string x_request_id;
 	int64_t num_samples = -1;
@@ -165,7 +161,7 @@ static void thread_routine(std::shared_ptr<ChannelBackend> channel_backend,
 		byte_queue->Push(initial_data);
 	}
 
-	tinkoff::cloud::tts::v1::StreamingSynthesizeSpeechResponse response;
+	voiptime::cloud::tts::v1::StreamingSynthesizeSpeechResponse response;
 	while (stream->Read(&response)) {
 		switch (remote_frame_format) {
 		case GRPCTTS_FRAME_FORMAT_OPUS: {
@@ -212,7 +208,7 @@ static std::atomic<int> Job_alloc_balance;
 
 Job::Job(std::shared_ptr<ChannelBackend> channel_backend,
 	 double speaking_rate, double pitch, double volume_gain_db,
-	 const std::string &voice_language_code, const std::string &voice_name, enum tinkoff::cloud::tts::v1::SsmlVoiceGender ssml_gender,
+	 const std::string &voice_language_code, const std::string &voice_name, enum voiptime::cloud::tts::v1::SsmlVoiceGender ssml_gender,
 	 enum grpctts_frame_format remote_frame_format, const struct grpctts_job_input &job_input)
 	: byte_queue(std::make_shared<ByteQueue>())
 {

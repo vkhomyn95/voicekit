@@ -1,10 +1,6 @@
 /*
  * Asterisk VoiceKit modules
  *
- * Copyright (c) JSC Tinkoff Bank, 2018 - 2019
- *
- * Grigoriy Okopnik <g.e.okopnik@tinkoff.ru>
- *
  * See http://www.asterisk.org for more information about
  * the Asterisk project. Please do not directly contact
  * any of the maintainers of this project for assistance;
@@ -41,7 +37,7 @@ Channel::~Channel()
 {
 }
 Job *Channel::StartJob(double speaking_rate, double pitch, double volume_gain_db,
-		       const std::string &voice_language_code, const std::string &voice_name, enum tinkoff::cloud::tts::v1::SsmlVoiceGender ssml_gender,
+		       const std::string &voice_language_code, const std::string &voice_name, enum voiptime::cloud::tts::v1::SsmlVoiceGender ssml_gender,
 		       enum grpctts_frame_format remote_frame_format,
 		       const struct grpctts_job_input &job_input)
 {
