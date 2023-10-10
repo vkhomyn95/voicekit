@@ -330,8 +330,8 @@ private:
 	double vad_aggressiveness;
 	bool interim_results_enable;
 	double interim_results_interval;
-	int interim_results_max_predictions,
-	std::string interim_results_prediction_criteria,
+	int interim_results_max_predictions;
+	std::string interim_results_prediction_criteria;
 	bool enable_gender_identification;
 };
 
