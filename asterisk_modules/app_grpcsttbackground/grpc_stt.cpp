@@ -635,7 +635,7 @@ extern "C" void grpc_stt_run(int terminate_event_fd, const char *endpoint, const
 			     int vad_disable, double vad_min_speech_duration, double vad_max_speech_duration,
 			     double vad_silence_duration_threshold, double vad_silence_prob_threshold, double vad_aggressiveness,
 			     int interim_results_enable, double interim_results_interval, int interim_results_max_predictions,
-			     const *char interim_results_prediction_criteria, int enable_gender_identification)
+			     const char *interim_results_prediction_criteria, int enable_gender_identification)
 {
 	bool success = false;
 	int error_status;
