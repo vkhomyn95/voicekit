@@ -121,6 +121,7 @@ static std::string build_grpcstt_event(const voiptime::cloud::stt::v1::Streaming
 	}
 	json_object_set_new_nocheck(json_root, "is_final", json_boolean(stream_result.is_final()));
 	json_object_set_new_nocheck(json_root, "stability", json_real(stream_result.stability()));
+    json_object_set_new_nocheck(json_root, "request_uuid", json_string(stream_result.request_uuid()));
 	json_object_set_new_nocheck(json_root, "start_time", build_json_duration(recognition_result.start_time()));
 	json_object_set_new_nocheck(json_root, "end_time", build_json_duration(recognition_result.end_time()));
 

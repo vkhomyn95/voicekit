@@ -147,6 +147,7 @@ message StreamingRecognitionResult { // Recognized phrase using StreamingRecogni
   SpeechRecognitionResult recognition_result = 1; // Recognition result.
   bool is_final = 2; // Set to true if final version of phrase is recognized. Value of false means interim result.
   float stability = 3; // <i>Currently unused.</i> Stability factor.
+  string request_uuid = 4; // Request uuid
 }
 
 message StreamingRecognizeResponse { // Response with regognized phrases (message from server to client).
