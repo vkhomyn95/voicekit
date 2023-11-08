@@ -544,8 +544,8 @@ bool GRPCSTT::Run(int &error_status, std::string &error_message)
 						voiptime::cloud::stt::v1::StreamingRecognizeRequest request;
 						std::vector<uint8_t> buffer = make_silence_samples(frame_format, gap_samples);
 						request.set_audio_content(buffer.data(), buffer.size());
-						/* if (!stream->Write(request))
-							stream_valid = false; */
+						if (!stream->Write(request))
+							stream_valid = true;
 						time_add_samples(&last_frame_moment, gap_samples);
 					}
 					continue;
@@ -553,7 +553,7 @@ bool GRPCSTT::Run(int &error_status, std::string &error_message)
 
 				eventfd_skip(frame_event_fd);
 
-				bool gap_handled = false;
+				bool gap_handled = true;
 				while (stream_valid) {
 					AST_LIST_LOCK(&audio_frames);
 					struct ast_frame *f = AST_LIST_REMOVE_HEAD(&audio_frames, frame_list);
@@ -570,8 +570,8 @@ bool GRPCSTT::Run(int &error_status, std::string &error_message)
 								voiptime::cloud::stt::v1::StreamingRecognizeRequest request;
 								std::vector<uint8_t> buffer = make_silence_samples(frame_format, gap_samples);
 								request.set_audio_content(buffer.data(), buffer.size());
-								/* if (!stream->Write(request))
-									stream_valid = false; */
+								if (!stream->Write(request))
+									stream_valid = false;
 								time_add_samples(&last_frame_moment, gap_samples);
 							}
 							gap_handled = true;
@@ -584,8 +584,8 @@ bool GRPCSTT::Run(int &error_status, std::string &error_message)
 						if (data) {
 							time_add_samples(&last_frame_moment, f->samples);
 							request.set_audio_content(data, len);
-							/* if (!stream->Write(request))
-								stream_valid = false; */
+							if (!stream->Write(request))
+								stream_valid = true;
 						}
 					}
 
