@@ -540,20 +540,20 @@ bool GRPCSTT::Run(int &error_status, std::string &error_message)
 					struct timespec current_moment;
 					clock_gettime(CLOCK_MONOTONIC_RAW, &current_moment);
 					int gap_samples = aligned_samples(delta_samples(&current_moment, &last_frame_moment) - MAX_FRAME_SAMPLES);
-					if (gap_samples > 0) {
-						voiptime::cloud::stt::v1::StreamingRecognizeRequest request;
-						std::vector<uint8_t> buffer = make_silence_samples(frame_format, gap_samples);
-						request.set_audio_content(buffer.data(), buffer.size());
-						if (!stream->Write(request))
-							stream_valid = true;
-						time_add_samples(&last_frame_moment, gap_samples);
-					}
+//					if (gap_samples > 0) {
+//						voiptime::cloud::stt::v1::StreamingRecognizeRequest request;
+//						std::vector<uint8_t> buffer = make_silence_samples(frame_format, gap_samples);
+//						request.set_audio_content(buffer.data(), buffer.size());
+//						if (!stream->Write(request))
+//							stream_valid = false;
+//						time_add_samples(&last_frame_moment, gap_samples);
+//					}
 					continue;
 				}
 
 				eventfd_skip(frame_event_fd);
 
-				bool gap_handled = true;
+				bool gap_handled = false;
 				while (stream_valid) {
 					AST_LIST_LOCK(&audio_frames);
 					struct ast_frame *f = AST_LIST_REMOVE_HEAD(&audio_frames, frame_list);
@@ -566,14 +566,14 @@ bool GRPCSTT::Run(int &error_status, std::string &error_message)
 						clock_gettime(CLOCK_MONOTONIC_RAW, &current_moment);
 						if (!gap_handled) {
 							int gap_samples = aligned_samples(delta_samples(&current_moment, &last_frame_moment) - f->samples);
-							if (gap_samples > 0) {
-								voiptime::cloud::stt::v1::StreamingRecognizeRequest request;
-								std::vector<uint8_t> buffer = make_silence_samples(frame_format, gap_samples);
-								request.set_audio_content(buffer.data(), buffer.size());
-								if (!stream->Write(request))
-									stream_valid = false;
-								time_add_samples(&last_frame_moment, gap_samples);
-							}
+//							if (gap_samples > 0) {
+//								voiptime::cloud::stt::v1::StreamingRecognizeRequest request;
+//								std::vector<uint8_t> buffer = make_silence_samples(frame_format, gap_samples);
+//								request.set_audio_content(buffer.data(), buffer.size());
+//								if (!stream->Write(request))
+//									stream_valid = false;
+//								time_add_samples(&last_frame_moment, gap_samples);
+//							}
 							gap_handled = true;
 						}
 
@@ -584,8 +584,8 @@ bool GRPCSTT::Run(int &error_status, std::string &error_message)
 						if (data) {
 							time_add_samples(&last_frame_moment, f->samples);
 							request.set_audio_content(data, len);
-							if (!stream->Write(request))
-								stream_valid = true;
+							stream->Write(request);
+//								stream_valid = false;
 						}
 					}
 
