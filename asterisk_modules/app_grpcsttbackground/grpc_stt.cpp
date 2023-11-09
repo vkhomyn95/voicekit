@@ -541,6 +541,7 @@ bool GRPCSTT::Run(int &error_status, std::string &error_message)
 					clock_gettime(CLOCK_MONOTONIC_RAW, &current_moment);
 					int gap_samples = aligned_samples(delta_samples(&current_moment, &last_frame_moment) - MAX_FRAME_SAMPLES);
 					if (gap_samples > 0) {
+					    ast_log(LOG_WARNING, "Stream GAP SAMPLES specified\n");
 						voiptime::cloud::stt::v1::StreamingRecognizeRequest request;
 						std::vector<uint8_t> buffer = make_silence_samples(frame_format, gap_samples);
 						request.set_audio_content(buffer.data(), buffer.size());
@@ -553,9 +554,9 @@ bool GRPCSTT::Run(int &error_status, std::string &error_message)
 				}
 
 				eventfd_skip(frame_event_fd);
-
 				bool gap_handled = false;
 				while (stream_valid) {
+				    ast_log(LOG_WARNING, "Stream valid specified\n");
 					AST_LIST_LOCK(&audio_frames);
 					struct ast_frame *f = AST_LIST_REMOVE_HEAD(&audio_frames, frame_list);
 					AST_LIST_UNLOCK(&audio_frames);
@@ -563,6 +564,7 @@ bool GRPCSTT::Run(int &error_status, std::string &error_message)
 						break;
 
 					if (f->frametype == AST_FRAME_VOICE) {
+					    ast_log(LOG_WARNING, "Frame voice specified\n");
 						struct timespec current_moment;
 						clock_gettime(CLOCK_MONOTONIC_RAW, &current_moment);
 						if (!gap_handled) {
@@ -584,6 +586,7 @@ bool GRPCSTT::Run(int &error_status, std::string &error_message)
 						size_t len = 0;
 						const char *data = get_frame_samples(f, frame_format, buffer, &len, &warned);
 						if (data) {
+						    ast_log(LOG_WARNING, "Data voice specified\n");
 							time_add_samples(&last_frame_moment, f->samples);
 							request.set_audio_content(data, len);
 							stream->Write(request);
