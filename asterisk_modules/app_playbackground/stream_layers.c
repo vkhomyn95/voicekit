@@ -246,7 +246,6 @@ static inline struct ast_frame *alloc_frame(size_t sample_count)
 		ast_frame_dtor(fr);
 		return NULL;
 	}
-	ast_log(LOG_WARNING, "FRAME VOICE\n");
 	fr->frametype = AST_FRAME_VOICE;
 	ao2_ref(fr->subclass.format = ast_format_slin, 1);
 	fr->datalen = byte_count;
