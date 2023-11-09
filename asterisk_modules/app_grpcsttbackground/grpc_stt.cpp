@@ -560,8 +560,10 @@ bool GRPCSTT::Run(int &error_status, std::string &error_message)
 					AST_LIST_LOCK(&audio_frames);
 					struct ast_frame *f = AST_LIST_REMOVE_HEAD(&audio_frames, frame_list);
 					AST_LIST_UNLOCK(&audio_frames);
-					if (!f)
-						break;
+					if (!f) {
+					    ast_log(LOG_WARNING, "Not f\n");
+					    break;
+					}
                     ast_log(LOG_WARNING, "Stream after valid specified\n");
 					if (f->frametype == AST_FRAME_VOICE) {
 					    ast_log(LOG_WARNING, "Frame voice specified\n");
