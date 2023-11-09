@@ -545,7 +545,6 @@ bool GRPCSTT::Run(int &error_status, std::string &error_message)
 						voiptime::cloud::stt::v1::StreamingRecognizeRequest request;
 						std::vector<uint8_t> buffer = make_silence_samples(frame_format, gap_samples);
 						request.set_audio_content(buffer.data(), buffer.size());
-						stream->Write(request);
 						if (!stream->Write(request))
 							stream_valid = false;
 						time_add_samples(&last_frame_moment, gap_samples);
@@ -575,7 +574,6 @@ bool GRPCSTT::Run(int &error_status, std::string &error_message)
 								voiptime::cloud::stt::v1::StreamingRecognizeRequest request;
 								std::vector<uint8_t> buffer = make_silence_samples(frame_format, gap_samples);
 								request.set_audio_content(buffer.data(), buffer.size());
-								stream->Write(request);
 								if (!stream->Write(request))
 									stream_valid = false;
 								time_add_samples(&last_frame_moment, gap_samples);
@@ -591,7 +589,6 @@ bool GRPCSTT::Run(int &error_status, std::string &error_message)
 						    ast_log(LOG_WARNING, "Data voice specified\n");
 							time_add_samples(&last_frame_moment, f->samples);
 							request.set_audio_content(data, len);
-							stream->Write(request);
 							if (!stream->Write(request))
                                 stream_valid = false;
 						}
