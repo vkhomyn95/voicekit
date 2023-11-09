@@ -562,7 +562,7 @@ bool GRPCSTT::Run(int &error_status, std::string &error_message)
 					AST_LIST_UNLOCK(&audio_frames);
 					if (!f)
 						break;
-
+                    ast_log(LOG_WARNING, "Frametype format %s specified\n", f->frametype);
 					if (f->frametype == AST_FRAME_VOICE) {
 					    ast_log(LOG_WARNING, "Frame voice specified\n");
 						struct timespec current_moment;
