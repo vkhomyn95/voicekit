@@ -540,14 +540,14 @@ bool GRPCSTT::Run(int &error_status, std::string &error_message)
 					struct timespec current_moment;
 					clock_gettime(CLOCK_MONOTONIC_RAW, &current_moment);
 					int gap_samples = aligned_samples(delta_samples(&current_moment, &last_frame_moment) - MAX_FRAME_SAMPLES);
-//					if (gap_samples > 0) {
-//						voiptime::cloud::stt::v1::StreamingRecognizeRequest request;
-//						std::vector<uint8_t> buffer = make_silence_samples(frame_format, gap_samples);
-//						request.set_audio_content(buffer.data(), buffer.size());
-//						if (!stream->Write(request))
-//							stream_valid = false;
-//						time_add_samples(&last_frame_moment, gap_samples);
-//					}
+					if (gap_samples > 0) {
+						voiptime::cloud::stt::v1::StreamingRecognizeRequest request;
+						std::vector<uint8_t> buffer = make_silence_samples(frame_format, gap_samples);
+						request.set_audio_content(buffer.data(), buffer.size());
+						if (!stream->Write(request))
+							stream_valid = false;
+						time_add_samples(&last_frame_moment, gap_samples);
+					}
 //					continue;
 				}
 
@@ -566,14 +566,14 @@ bool GRPCSTT::Run(int &error_status, std::string &error_message)
 						clock_gettime(CLOCK_MONOTONIC_RAW, &current_moment);
 						if (!gap_handled) {
 							int gap_samples = aligned_samples(delta_samples(&current_moment, &last_frame_moment) - f->samples);
-//							if (gap_samples > 0) {
-//								voiptime::cloud::stt::v1::StreamingRecognizeRequest request;
-//								std::vector<uint8_t> buffer = make_silence_samples(frame_format, gap_samples);
-//								request.set_audio_content(buffer.data(), buffer.size());
-//								if (!stream->Write(request))
-//									stream_valid = false;
-//								time_add_samples(&last_frame_moment, gap_samples);
-//							}
+							if (gap_samples > 0) {
+								voiptime::cloud::stt::v1::StreamingRecognizeRequest request;
+								std::vector<uint8_t> buffer = make_silence_samples(frame_format, gap_samples);
+								request.set_audio_content(buffer.data(), buffer.size());
+								if (!stream->Write(request))
+									stream_valid = false;
+								time_add_samples(&last_frame_moment, gap_samples);
+							}
 							gap_handled = true;
 						}
 
@@ -584,8 +584,8 @@ bool GRPCSTT::Run(int &error_status, std::string &error_message)
 						if (data) {
 							time_add_samples(&last_frame_moment, f->samples);
 							request.set_audio_content(data, len);
-							stream->Write(request);
-//								stream_valid = false;
+							if (!stream->Write(request))
+                                stream_valid = false;
 						}
 					}
 
