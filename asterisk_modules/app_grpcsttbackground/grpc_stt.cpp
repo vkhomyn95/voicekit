@@ -546,11 +546,11 @@ bool GRPCSTT::Run(int &error_status, std::string &error_message)
 						std::vector<uint8_t> buffer = make_silence_samples(frame_format, gap_samples);
 						request.set_audio_content(buffer.data(), buffer.size());
 						stream->Write(request);
-//						if (!stream->Write(request))
-//							stream_valid = false;
+						if (!stream->Write(request))
+							stream_valid = false;
 						time_add_samples(&last_frame_moment, gap_samples);
 					}
-//					continue;
+					continue;
 				}
 
 				eventfd_skip(frame_event_fd);
@@ -576,8 +576,8 @@ bool GRPCSTT::Run(int &error_status, std::string &error_message)
 								std::vector<uint8_t> buffer = make_silence_samples(frame_format, gap_samples);
 								request.set_audio_content(buffer.data(), buffer.size());
 								stream->Write(request);
-//								if (!stream->Write(request))
-//									stream_valid = false;
+								if (!stream->Write(request))
+									stream_valid = false;
 								time_add_samples(&last_frame_moment, gap_samples);
 							}
 							gap_handled = true;
@@ -592,8 +592,8 @@ bool GRPCSTT::Run(int &error_status, std::string &error_message)
 							time_add_samples(&last_frame_moment, f->samples);
 							request.set_audio_content(data, len);
 							stream->Write(request);
-//							if (!stream->Write(request))
-//                                stream_valid = false;
+							if (!stream->Write(request))
+                                stream_valid = false;
 						}
 					}
 
