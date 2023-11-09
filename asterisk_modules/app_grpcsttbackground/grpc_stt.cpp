@@ -548,7 +548,7 @@ bool GRPCSTT::Run(int &error_status, std::string &error_message)
 //							stream_valid = false;
 //						time_add_samples(&last_frame_moment, gap_samples);
 //					}
-					continue;
+//					continue;
 				}
 
 				eventfd_skip(frame_event_fd);
