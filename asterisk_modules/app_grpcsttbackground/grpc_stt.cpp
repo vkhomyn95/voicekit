@@ -605,12 +605,11 @@ bool GRPCSTT::Run(int &error_status, std::string &error_message)
 	try {
 		voiptime::cloud::stt::v1::StreamingRecognizeResponse response;
 		while (stream->Read(&response)) {
-		    if (!response.results().empty()) {
-                for (const voiptime::cloud::stt::v1::StreamingRecognitionResult &stream_result: response.results()) {
-                    push_grpcstt_event(chan, build_grpcstt_event(stream_result, false), false);
-                    push_grpcstt_event(chan, build_grpcstt_event(stream_result, true), true);
-                }
-            }
+		    ast_log(LOG_WARNING, "RESPONSE received\n");
+			for (const voiptime::cloud::stt::v1::StreamingRecognitionResult &stream_result: response.results()) {
+//				push_grpcstt_event(chan, build_grpcstt_event(stream_result, false), false);
+//				push_grpcstt_event(chan, build_grpcstt_event(stream_result, true), true);
+			}
 		}
 	} catch (const std::exception &ex) {
 		Terminate();
