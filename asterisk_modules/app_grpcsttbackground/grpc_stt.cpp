@@ -301,7 +301,7 @@ public:
 		const char *language_code, int max_alternatives, enum grpc_stt_frame_format frame_format,
 		bool vad_disable, double vad_min_speech_duration, double vad_max_speech_duration,
 		double vad_silence_duration_threshold, double vad_silence_prob_threshold, double vad_aggressiveness,
-		bool interim_results_enable, double interim_results_interval, int interim_results_max_predictions,
+		bool interim_results_enable, double interim_results_max_interval, int interim_results_max_predictions,
 		const char *interim_results_prediction_criteria, bool enable_gender_identification);
 	~GRPCSTT();
 	void ReapAudioFrame(struct ast_frame *frame);
@@ -330,7 +330,7 @@ private:
 	double vad_silence_prob_threshold;
 	double vad_aggressiveness;
 	bool interim_results_enable;
-	double interim_results_interval;
+	double interim_results_max_interval;
 	int interim_results_max_predictions;
 	std::string interim_results_prediction_criteria;
 	bool enable_gender_identification;
@@ -385,7 +385,7 @@ GRPCSTT::GRPCSTT(int terminate_event_fd, std::shared_ptr<grpc::Channel> grpc_cha
 		 struct ast_channel *chan, const char *language_code, int max_alternatives, enum grpc_stt_frame_format frame_format,
 		 bool vad_disable, double vad_min_speech_duration, double vad_max_speech_duration,
 		 double vad_silence_duration_threshold, double vad_silence_prob_threshold, double vad_aggressiveness,
-		 bool interim_results_enable, double interim_results_interval, int interim_results_max_predictions,
+		 bool interim_results_enable, double interim_results_max_interval, int interim_results_max_predictions,
 		 const char *interim_results_prediction_criteria, bool enable_gender_identification)
 	: terminate_event_fd(terminate_event_fd), stt_stub(voiptime::cloud::stt::v1::SpeechToText::NewStub(grpc_channel)),
 	authorization_api_key(authorization_api_key), authorization_secret_key(authorization_secret_key),
@@ -393,7 +393,7 @@ GRPCSTT::GRPCSTT(int terminate_event_fd, std::shared_ptr<grpc::Channel> grpc_cha
 	chan(chan), language_code(language_code), max_alternatives(max_alternatives), frame_format(frame_format), framehook_id(-1),
 	vad_disable(vad_disable), vad_min_speech_duration(vad_min_speech_duration), vad_max_speech_duration(vad_max_speech_duration),
 	vad_silence_duration_threshold(vad_silence_duration_threshold), vad_silence_prob_threshold(vad_silence_prob_threshold), vad_aggressiveness(vad_aggressiveness),
-	interim_results_enable(interim_results_enable), interim_results_interval(interim_results_interval),
+	interim_results_enable(interim_results_enable), interim_results_max_interval(interim_results_max_interval),
 	interim_results_max_predictions(interim_results_max_predictions), interim_results_prediction_criteria(interim_results_prediction_criteria),
 	enable_gender_identification(enable_gender_identification)
 {
@@ -488,7 +488,7 @@ bool GRPCSTT::Run(int &error_status, std::string &error_message)
 					{
 						voiptime::cloud::stt::v1::InterimResultsConfig *interim_results_config = streaming_recognition_config->mutable_interim_results_config();
 						interim_results_config->set_enable_interim_results(interim_results_enable);
-						interim_results_config->set_interval(interim_results_interval);
+						interim_results_config->set_interval(interim_results_max_interval);
 						interim_results_config->set_max_predictions(interim_results_max_predictions);
 						interim_results_config->set_prediction_criteria(interim_results_prediction_criteria);
 					}
@@ -642,7 +642,7 @@ extern "C" void grpc_stt_run(int terminate_event_fd, const char *endpoint, const
 			     const char *language_code, int max_alternatives, enum grpc_stt_frame_format frame_format,
 			     int vad_disable, double vad_min_speech_duration, double vad_max_speech_duration,
 			     double vad_silence_duration_threshold, double vad_silence_prob_threshold, double vad_aggressiveness,
-			     int interim_results_enable, double interim_results_interval, int interim_results_max_predictions,
+			     int interim_results_enable, double interim_results_max_interval, int interim_results_max_predictions,
 			     const char *interim_results_prediction_criteria, int enable_gender_identification)
 {
 	bool success = false;
@@ -661,7 +661,7 @@ extern "C" void grpc_stt_run(int terminate_event_fd, const char *endpoint, const
 			chan, (language_code ? language_code : ""), max_alternatives, frame_format,
 			vad_disable, vad_min_speech_duration, vad_max_speech_duration,
 			vad_silence_duration_threshold, vad_silence_prob_threshold, vad_aggressiveness,
-			interim_results_enable, interim_results_interval, interim_results_max_predictions,
+			interim_results_enable, interim_results_max_interval, interim_results_max_predictions,
 			interim_results_prediction_criteria, enable_gender_identification
 		);
 #undef NON_NULL_STRING

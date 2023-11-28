@@ -49,7 +49,7 @@ extern void grpc_stt_run(
 	double vad_silence_prob_threshold,
 	double vad_aggressiveness,
 	int interim_results_enable,
-	double interim_results_interval,
+	double interim_results_max_interval,
 	int interim_results_max_predictions,
 	const char *interim_results_prediction_criteria,
 	int enable_gender_identification);

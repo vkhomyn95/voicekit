@@ -167,7 +167,7 @@ struct thread_conf {
 	double vad_silence_prob_threshold;
 	double vad_aggressiveness;
 	int interim_results_enable;
-	double interim_results_interval;
+	double interim_results_max_interval;
 	int interim_results_max_predictions;
 	char *interim_results_prediction_criteria;
 	int enable_gender_identification;
@@ -194,7 +194,7 @@ static struct thread_conf dflt_thread_conf = {
 	.vad_silence_prob_threshold = 0.0,
 	.vad_aggressiveness = 0.0,
 	.interim_results_enable = 0,
-	.interim_results_interval = 0.0,
+	.interim_results_max_interval = 0.0,
 	.interim_results_max_predictions = 2,
 	.interim_results_prediction_criteria = NULL,
 	.enable_gender_identification = 0,
@@ -285,7 +285,7 @@ static struct thread_conf *make_thread_conf(const struct thread_conf *source)
 	conf->vad_silence_prob_threshold = source->vad_silence_prob_threshold;
 	conf->vad_aggressiveness = source->vad_aggressiveness;
 	conf->interim_results_enable = source->interim_results_enable;
-	conf->interim_results_interval = source->interim_results_interval;
+	conf->interim_results_max_interval = source->interim_results_max_interval;
 	conf->interim_results_max_predictions = source->interim_results_max_predictions;
 	conf->interim_results_prediction_criteria = source->interim_results_prediction_criteria;
 	conf->enable_gender_identification = source->enable_gender_identification;
@@ -301,7 +301,7 @@ static void *thread_start(struct thread_conf *conf)
 		     chan, conf->ssl_grpc, conf->ca_data, conf->language_code, conf->max_alternatives, conf->frame_format,
 		     conf->vad_disable, conf->vad_min_speech_duration, conf->vad_max_speech_duration,
 		     conf->vad_silence_duration_threshold, conf->vad_silence_prob_threshold, conf->vad_aggressiveness,
-		     conf->interim_results_enable, conf->interim_results_interval, conf->interim_results_max_predictions,
+		     conf->interim_results_enable, conf->interim_results_max_interval, conf->interim_results_max_predictions,
 		     conf->interim_results_prediction_criteria, conf->enable_gender_identification);
 
 	close(conf->terminate_event_fd);
@@ -339,7 +339,7 @@ static void clear_config(void)
 	dflt_thread_conf.vad_silence_prob_threshold = 0.0;
 	dflt_thread_conf.vad_aggressiveness = 0.0;
 	dflt_thread_conf.interim_results_enable = 0;
-	dflt_thread_conf.interim_results_interval = 0.0;
+	dflt_thread_conf.interim_results_max_interval = 0.0;
 	dflt_thread_conf.interim_results_max_predictions = 0;
 	dflt_thread_conf.interim_results_prediction_criteria = 0;
 	dflt_thread_conf.enable_gender_identification = 0;
@@ -423,8 +423,8 @@ static int load_config(int reload)
 			while (var) {
 				if (!strcasecmp(var->name, "enable")) {
 					dflt_thread_conf.interim_results_enable = ast_true(var->value);
-				} else if (!strcasecmp(var->name, "interval")) {
-					dflt_thread_conf.interim_results_interval = atof(var->value);
+				} else if (!strcasecmp(var->name, "max_interval")) {
+					dflt_thread_conf.interim_results_max_interval = atof(var->value);
 				} else if (!strcasecmp(var->name, "max_predictions")) {
 					dflt_thread_conf.interim_results_max_predictions = atoi(var->value);
 				} else if (!strcasecmp(var->name, "prediction_criteria")) {
