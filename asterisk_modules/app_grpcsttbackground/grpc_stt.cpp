@@ -40,6 +40,7 @@ extern "C" {
 #include <asterisk/compiler.h>
 #include <asterisk/time.h>
 #include <asterisk/channel.h>
+#include <asterisk/pbx.h>
 #include <asterisk/format_cache.h>
 #include <asterisk/alaw.h>
 #include <asterisk/ulaw.h>
@@ -105,10 +106,12 @@ static json_t *build_json_gender_identification_result(const float male_proba, c
 	json_object_set_new_nocheck(json_gender_identification, "female_proba", json_real(female_proba));
 	return json_gender_identification;
 }
-static std::string build_grpcstt_event(const voiptime::cloud::stt::v1::StreamingRecognitionResult &stream_result, bool json_ensure_ascii)
+static std::string build_grpcstt_event(struct ast_channel *chan, const voiptime::cloud::stt::v1::StreamingRecognitionResult &stream_result, bool json_ensure_ascii)
 {
 	const voiptime::cloud::stt::v1::SpeechRecognitionResult &recognition_result = stream_result.recognition_result();
 	json_t *json_root = json_object();
+	const char *variable_name = "tId_and_tsId";
+    const char *variable_value = pbx_builtin_getvar_helper(chan, variable_name);
 	{
 		json_t *json_alternatives = json_array();
 		for (const voiptime::cloud::stt::v1::SpeechRecognitionAlternative &alternative: recognition_result.alternatives()) {
@@ -122,6 +125,7 @@ static std::string build_grpcstt_event(const voiptime::cloud::stt::v1::Streaming
 	json_object_set_new_nocheck(json_root, "is_final", json_boolean(stream_result.is_final()));
 	json_object_set_new_nocheck(json_root, "stability", json_real(stream_result.stability()));
     json_object_set_new_nocheck(json_root, "request_uuid", json_string(stream_result.request_uuid().c_str()));
+    json_object_set_new_nocheck(json_root, "tId_and_tsId", json_string(variable_value.c_str()));
 	json_object_set_new_nocheck(json_root, "start_time", build_json_duration(recognition_result.start_time()));
 	json_object_set_new_nocheck(json_root, "end_time", build_json_duration(recognition_result.end_time()));
 
@@ -140,7 +144,7 @@ static std::string build_grpcstt_event(const voiptime::cloud::stt::v1::Streaming
 }
 static void push_grpcstt_event(struct ast_channel *chan, const std::string &data, bool ensure_ascii)
 {
-	struct ast_json *blob = ast_json_pack("{s: s, s: s}", "eventname", (ensure_ascii ? "GRPCSTTASCII" : "GRPCSTTUTF8"), "eventbody", data.c_str());
+	struct ast_json *blob = ast_json_pack("{s: s, s: s}", "eventname", (ensure_ascii ? "SpeechRecognition" : "SpeechRecognition"), "eventbody", data.c_str());
 	if (!blob)
 		return;
 
@@ -152,7 +156,7 @@ static void push_grpcstt_event(struct ast_channel *chan, const std::string &data
 }
 static void push_grpcstt_x_request_id_event(struct ast_channel *chan, const std::string &data)
 {
-	struct ast_json *blob = ast_json_pack("{s: s, s: s}", "eventname", "GRPCSTT_X_REQUEST_ID", "eventbody", data.c_str());
+	struct ast_json *blob = ast_json_pack("{s: s, s: s}", "eventname", "SpeechRequest", "eventbody", data.c_str());
 	if (!blob)
 		return;
 
@@ -165,7 +169,7 @@ static void push_grpcstt_x_request_id_event(struct ast_channel *chan, const std:
 static void push_grpcstt_session_finished_event(struct ast_channel *chan, bool success, int error_code, const std::string &error_message)
 {
 	std::string data = success ? "SUCCESS,," : ("FAILURE," + std::to_string(error_code) + "," + error_message);
-	struct ast_json *blob = ast_json_pack("{s: s, s: s}", "eventname", "GRPCSTT_SESSION_FINISHED", "eventbody", data.c_str());
+	struct ast_json *blob = ast_json_pack("{s: s, s: s}", "eventname", "SpeechSession", "eventbody", data.c_str());
 	if (!blob)
 		return;
 
@@ -607,7 +611,7 @@ bool GRPCSTT::Run(int &error_status, std::string &error_message)
 		while (stream->Read(&response)) {
 //		    ast_log(LOG_WARNING, "RESPONSE received\n");
 			for (const voiptime::cloud::stt::v1::StreamingRecognitionResult &stream_result: response.results()) {
-				push_grpcstt_event(chan, build_grpcstt_event(stream_result, false), false);
+				push_grpcstt_event(chan, build_grpcstt_event(chan, stream_result, false), false);
 //				push_grpcstt_event(chan, build_grpcstt_event(stream_result, true), true);
 			}
 		}
