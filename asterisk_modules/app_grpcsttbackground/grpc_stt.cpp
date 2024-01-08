@@ -475,7 +475,9 @@ bool GRPCSTT::Run(int &error_status, std::string &error_message)
 						recognition_config->set_num_channels(1);
 						if (language_code.size())
 							recognition_config->set_language_code(language_code);
-						recognition_config->set_channel_exten(ast_channel_exten(chan));
+						const char *variable_name = "MACRO_EXTEN";
+                        const char *variable_value = pbx_builtin_getvar_helper(chan, variable_name);
+						recognition_config->set_channel_exten(variable_value);
 						recognition_config->set_max_alternatives(max_alternatives);
 						if (vad_disable) {
 							recognition_config->set_do_not_perform_vad(true);
