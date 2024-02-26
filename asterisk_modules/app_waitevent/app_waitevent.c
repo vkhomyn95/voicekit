@@ -552,13 +552,13 @@ static void push_session_finished_event(struct ast_channel *chan, int error_code
 	char data[256];
     snprintf(data, sizeof(data), "FAILURE,%d,%s,%s", error_code, error_message, identifiers);
 
-    struct ast_json *blob = malloc(sizeof(struct ast_json));
+    struct ast_json *blob = ast_malloc(sizeof(struct ast_json));
     if (!blob)
         return;
 
     // Dummy implementation for ast_json_pack
     // You need to implement or use a JSON library in C
-    blob->data = strdup(data);
+    blob->data = ast_strdup(data);
 
 	ast_channel_lock(chan);
 	ast_multi_object_blob_single_channel_publish(chan, ast_multi_user_event_type(), blob);
