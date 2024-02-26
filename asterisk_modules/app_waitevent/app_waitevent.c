@@ -549,22 +549,17 @@ static int load_module(void)
 
 static void push_session_finished_event(struct ast_channel *chan, int error_code, const char *error_message, const char *identifiers)
 {
-	char data[256];
+	char data[4096];
     snprintf(data, sizeof(data), "FAILURE,%d,%s,%s", error_code, error_message, identifiers);
-
-    struct ast_json *blob = ast_malloc(sizeof(struct ast_json));
+    struct ast_json *blob = ast_json_pack("{s: s, s: s}", "eventname", "SpeechSession", "eventbody", data);
     if (!blob)
         return;
 
-    // Dummy implementation for ast_json_pack
-    // You need to implement or use a JSON library in C
-    blob->data = ast_strdup(data);
+    ast_channel_lock(chan);
+    ast_multi_object_blob_single_channel_publish(chan, ast_multi_user_event_type(), blob);
+    ast_channel_unlock(chan);
 
-	ast_channel_lock(chan);
-	ast_multi_object_blob_single_channel_publish(chan, ast_multi_user_event_type(), blob);
-	ast_channel_unlock(chan);
-
-	ast_json_unref(blob);
+    ast_json_unref(blob);
 }
 
 AST_MODULE_INFO_STANDARD_EXTENDED(ASTERISK_GPL_KEY, "[" ASTERISK_MODULE_VERSION_STRING "] Event Control Application");
