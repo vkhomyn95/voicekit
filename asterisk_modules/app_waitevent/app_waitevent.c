@@ -422,6 +422,20 @@ static inline void read_out_frames(struct ast_channel *chan)
 		ast_frame_dtor(ast_read(chan));
 	}
 }
+void push_session_finished_event(struct ast_channel *chan, int error_code, const char *error_message, const char *identifiers)
+{
+	char data[4096];
+    snprintf(data, sizeof(data), "FAILURE,%d,%s,%s", error_code, error_message, identifiers);
+    struct ast_json *blob = ast_json_pack("{s: s, s: s}", "eventname", "SpeechSession", "eventbody", data);
+    if (!blob)
+        return;
+
+    ast_channel_lock(chan);
+    ast_multi_object_blob_single_channel_publish(chan, ast_multi_user_event_type(), blob);
+    ast_channel_unlock(chan);
+
+    ast_json_unref(blob);
+}
 /*
   Waits for channel event or event on event_fd
   Returns:
@@ -545,21 +559,6 @@ static int load_module(void)
 	return
 		ast_register_application_xml(waiteventinit_app, waiteventinit_exec) |
 		ast_register_application_xml(waitevent_app, waitevent_exec);
-}
-
-static inline void push_session_finished_event(struct ast_channel *chan, int error_code, const char *error_message, const char *identifiers)
-{
-	char data[4096];
-    snprintf(data, sizeof(data), "FAILURE,%d,%s,%s", error_code, error_message, identifiers);
-    struct ast_json *blob = ast_json_pack("{s: s, s: s}", "eventname", "SpeechSession", "eventbody", data);
-    if (!blob)
-        return;
-
-    ast_channel_lock(chan);
-    ast_multi_object_blob_single_channel_publish(chan, ast_multi_user_event_type(), blob);
-    ast_channel_unlock(chan);
-
-    ast_json_unref(blob);
 }
 
 AST_MODULE_INFO_STANDARD_EXTENDED(ASTERISK_GPL_KEY, "[" ASTERISK_MODULE_VERSION_STRING "] Event Control Application");
