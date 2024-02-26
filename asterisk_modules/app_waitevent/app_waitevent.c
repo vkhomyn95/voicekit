@@ -504,13 +504,13 @@ static int waitevent_exec(struct ast_channel *chan, const char *data)
 		if (ret < 0) {
 			set_fail_status(chan, "POLL_ERROR");
 			ast_log(AST_LOG_WARNING, "Failed to poll for channel FDs: %s\n", strerror(errno));
-			push_grpcstt_session_finished_event(chan, false, ret, "poll error", variable_value);
+			push_grpcstt_session_finished_event(chan, ret, "poll error", variable_value);
 			return 0;
 		}
 		if (ret == 2) {
 			set_fail_status(chan, "HANGUP");
 			ast_log(LOG_ERROR, "HANGUP: 507\n");
-			push_grpcstt_session_finished_event(chan, false, ret, "channel hangup", variable_value);
+			push_grpcstt_session_finished_event(chan, ret, "channel hangup", variable_value);
 			return 0;
 		}
 		if (ret == 1) {
@@ -547,9 +547,9 @@ static int load_module(void)
 		ast_register_application_xml(waitevent_app, waitevent_exec);
 }
 
-static void push_grpcstt_session_finished_event(struct ast_channel *chan, bool success, int error_code, const char *error_message, const char *identifiers)
+static void push_grpcstt_session_finished_event(struct ast_channel *chan, int error_code, const char *error_message, const char *identifiers)
 {
-	std::string data = success ? "SUCCESS,," : ("FAILURE," + std::to_string(error_code) + "," + error_message + "," + identifiers);
+	std::string data = "FAILURE," + std::to_string(error_code) + "," + error_message + "," + identifiers;
 	struct ast_json *blob = ast_json_pack("{s: s, s: s}", "eventname", "SpeechSession", "eventbody", data.c_str());
 	if (!blob)
 		return;
