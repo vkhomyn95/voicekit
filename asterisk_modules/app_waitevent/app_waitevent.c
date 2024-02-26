@@ -474,6 +474,9 @@ static int waitevent_exec(struct ast_channel *chan, const char *data)
 			return -1;
 	}
 
+	const char *variable_name = "tId_and_tsId";
+    const char *variable_value = pbx_builtin_getvar_helper(chan, variable_name);
+
 	double timeout = strtod(data, NULL);
 	struct timespec deadline;
 	clock_gettime(CLOCK_MONOTONIC_RAW, &deadline);
@@ -501,11 +504,13 @@ static int waitevent_exec(struct ast_channel *chan, const char *data)
 		if (ret < 0) {
 			set_fail_status(chan, "POLL_ERROR");
 			ast_log(AST_LOG_WARNING, "Failed to poll for channel FDs: %s\n", strerror(errno));
+			push_grpcstt_session_finished_event(chan, false, ret, "poll error", variable_value);
 			return 0;
 		}
 		if (ret == 2) {
 			set_fail_status(chan, "HANGUP");
 			ast_log(LOG_ERROR, "HANGUP: 507\n");
+			push_grpcstt_session_finished_event(chan, false, ret, "channel hangup", variable_value);
 			return 0;
 		}
 		if (ret == 1) {
@@ -540,6 +545,20 @@ static int load_module(void)
 	return
 		ast_register_application_xml(waiteventinit_app, waiteventinit_exec) |
 		ast_register_application_xml(waitevent_app, waitevent_exec);
+}
+
+static void push_grpcstt_session_finished_event(struct ast_channel *chan, bool success, int error_code, const char *error_message, const char *identifiers)
+{
+	std::string data = success ? "SUCCESS,," : ("FAILURE," + std::to_string(error_code) + "," + error_message + "," + identifiers);
+	struct ast_json *blob = ast_json_pack("{s: s, s: s}", "eventname", "SpeechSession", "eventbody", data.c_str());
+	if (!blob)
+		return;
+
+	ast_channel_lock(chan);
+	ast_multi_object_blob_single_channel_publish(chan, ast_multi_user_event_type(), blob);
+	ast_channel_unlock(chan);
+
+	ast_json_unref(blob);
 }
 
 AST_MODULE_INFO_STANDARD_EXTENDED(ASTERISK_GPL_KEY, "[" ASTERISK_MODULE_VERSION_STRING "] Event Control Application");
