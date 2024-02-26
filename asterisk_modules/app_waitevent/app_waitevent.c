@@ -425,7 +425,7 @@ static inline void read_out_frames(struct ast_channel *chan)
 void push_session_finished_event(struct ast_channel *chan, int error_code, const char *error_message, const char *identifiers)
 {
 	char data[4096];
-    snprintf(data, sizeof(data), "FAILURE,%d,%s,%s", error_code, error_message, identifiers);
+    snprintf(data, sizeof(data), "{\"status\": \"FAILURE\", \"code\": %d, \"message\": \"%s\", \"tId_and_tsId\": \"%s\"}", error_code, error_message, identifiers);
     struct ast_json *blob = ast_json_pack("{s: s, s: s}", "eventname", "SpeechSession", "eventbody", data);
     if (!blob)
         return;
@@ -541,6 +541,7 @@ static int waitevent_exec(struct ast_channel *chan, const char *data)
 	}
 
 	set_fail_status(chan, "TIMEOUT");
+	push_session_finished_event(chan, 0, "channel timeout", variable_value);
 
 	return 0;
 }

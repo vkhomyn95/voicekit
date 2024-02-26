@@ -168,7 +168,7 @@ static void push_grpcstt_x_request_id_event(struct ast_channel *chan, const std:
 }
 static void push_grpcstt_session_finished_event(struct ast_channel *chan, bool success, int error_code, const std::string &error_message)
 {
-	std::string data = success ? "SUCCESS,," : ("FAILURE," + std::to_string(error_code) + "," + error_message);
+	std::string data = success ? "{\"status\": \"SUCCESS\"}" : ("{\"status\": \"FAILURE\", \"code\":" + std::to_string(error_code) + ", \"message\":\"" + error_message + "\"}");
 	struct ast_json *blob = ast_json_pack("{s: s, s: s}", "eventname", "SpeechSession", "eventbody", data.c_str());
 	if (!blob)
 		return;
