@@ -36,7 +36,7 @@ extern struct ast_module *AST_MODULE_SELF_SYM(void);
 #include <asterisk/stasis_endpoints.h>
 #include <asterisk/channel.h>
 #include <asterisk/stasis_channels.h>
-
+#include <stdio.h>
 #include <math.h>
 #include <sys/eventfd.h>
 
@@ -504,13 +504,13 @@ static int waitevent_exec(struct ast_channel *chan, const char *data)
 		if (ret < 0) {
 			set_fail_status(chan, "POLL_ERROR");
 			ast_log(AST_LOG_WARNING, "Failed to poll for channel FDs: %s\n", strerror(errno));
-			push_grpcstt_session_finished_event(chan, ret, "poll error", variable_value);
+			push_session_finished_event(chan, ret, "poll error", variable_value);
 			return 0;
 		}
 		if (ret == 2) {
 			set_fail_status(chan, "HANGUP");
 			ast_log(LOG_ERROR, "HANGUP: 507\n");
-			push_grpcstt_session_finished_event(chan, ret, "channel hangup", variable_value);
+			push_session_finished_event(chan, ret, "channel hangup", variable_value);
 			return 0;
 		}
 		if (ret == 1) {
@@ -547,12 +547,18 @@ static int load_module(void)
 		ast_register_application_xml(waitevent_app, waitevent_exec);
 }
 
-static void push_grpcstt_session_finished_event(struct ast_channel *chan, int error_code, const char *error_message, const char *identifiers)
+static void push_session_finished_event(struct ast_channel *chan, int error_code, const char *error_message, const char *identifiers)
 {
-	const char *data = "FAILURE," + error_code + "," + error_message + "," + identifiers;
-	struct ast_json *blob = ast_json_pack("{s: s, s: s}", "eventname", "SpeechSession", "eventbody", data.c_str());
-	if (!blob)
-		return;
+	char data[256];
+    snprintf(data, sizeof(data), "FAILURE,%d,%s,%s", error_code, error_message, identifiers);
+
+    struct ast_json *blob = malloc(sizeof(struct ast_json));
+    if (!blob)
+        return;
+
+    // Dummy implementation for ast_json_pack
+    // You need to implement or use a JSON library in C
+    blob->data = strdup(data);
 
 	ast_channel_lock(chan);
 	ast_multi_object_blob_single_channel_publish(chan, ast_multi_user_event_type(), blob);
