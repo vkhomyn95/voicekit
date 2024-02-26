@@ -204,6 +204,7 @@ static void waitevent_subscription_cb(struct ht_user_message_queue *queue, struc
 
 static inline void set_success_status(struct ast_channel *chan, const char *name, const char *body)
 {
+    ast_log(LOG_ERROR, "set_success_status:  '%s'\n", reason);
 	pbx_builtin_setvar_helper(chan, "WAITEVENTSTATUS", "SUCCESS");
 	pbx_builtin_setvar_helper(chan, "WAITEVENTFAILREASON", "");
 	pbx_builtin_setvar_helper(chan, "WAITEVENTNAME", name);
@@ -211,6 +212,7 @@ static inline void set_success_status(struct ast_channel *chan, const char *name
 }
 static inline void set_fail_status(struct ast_channel *chan, const char *reason)
 {
+    ast_log(LOG_ERROR, "set_fail_status:  '%s'\n", reason);
 	pbx_builtin_setvar_helper(chan, "WAITEVENTSTATUS", "FAIL");
 	pbx_builtin_setvar_helper(chan, "WAITEVENTFAILREASON", reason);
 	pbx_builtin_setvar_helper(chan, "WAITEVENTNAME", "");
@@ -359,6 +361,7 @@ static void store_event(struct ast_channel *chan, struct ast_json *root)
 		goto fail;
 
 	struct ast_json *eventbody = ast_json_object_get(userevent, "eventbody");
+	ast_log(LOG_ERROR, "store_event:  '%s'\n", name);
 	set_success_status(chan, name, (eventbody ? ast_json_string_get(eventbody) : ""));
 	return;
 
@@ -488,6 +491,7 @@ static int waitevent_exec(struct ast_channel *chan, const char *data)
 		/* Recheck after reading out frames */
 		if (ast_check_hangup_locked(chan)) {
 			set_fail_status(chan, "HANGUP");
+			ast_log(LOG_ERROR, "HANGUP: 494\n");
 			return 0;
 		}
 		struct timespec rel_timeout;
@@ -501,6 +505,7 @@ static int waitevent_exec(struct ast_channel *chan, const char *data)
 		}
 		if (ret == 2) {
 			set_fail_status(chan, "HANGUP");
+			ast_log(LOG_ERROR, "HANGUP: 507\n");
 			return 0;
 		}
 		if (ret == 1) {
