@@ -547,7 +547,7 @@ static int load_module(void)
 		ast_register_application_xml(waitevent_app, waitevent_exec);
 }
 
-static void push_session_finished_event(struct ast_channel *chan, int error_code, const char *error_message, const char *identifiers)
+static inline void push_session_finished_event(struct ast_channel *chan, int error_code, const char *error_message, const char *identifiers)
 {
 	char data[4096];
     snprintf(data, sizeof(data), "FAILURE,%d,%s,%s", error_code, error_message, identifiers);
