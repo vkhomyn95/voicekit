@@ -204,7 +204,7 @@ static void waitevent_subscription_cb(struct ht_user_message_queue *queue, struc
 
 static inline void set_success_status(struct ast_channel *chan, const char *name, const char *body)
 {
-    ast_log(LOG_ERROR, "set_success_status:  '%s'\n", reason);
+    ast_log(LOG_ERROR, "set_success_status:  '%s'\n", body);
 	pbx_builtin_setvar_helper(chan, "WAITEVENTSTATUS", "SUCCESS");
 	pbx_builtin_setvar_helper(chan, "WAITEVENTFAILREASON", "");
 	pbx_builtin_setvar_helper(chan, "WAITEVENTNAME", name);
