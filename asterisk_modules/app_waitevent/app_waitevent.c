@@ -505,7 +505,7 @@ static int waitevent_exec(struct ast_channel *chan, const char *data)
 		/* Recheck after reading out frames */
 		if (ast_check_hangup_locked(chan)) {
 			set_fail_status(chan, "HANGUP");
-			push_session_finished_event(chan, ret, "channel hangup", variable_value);
+			push_session_finished_event(chan, 2, "channel hangup", variable_value);
 			return 0;
 		}
 		struct timespec rel_timeout;
