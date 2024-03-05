@@ -484,10 +484,10 @@ static int waitevent_exec(struct ast_channel *chan, const char *data)
 		if (!(queue = init_event_queue(chan)))
 			return -1;
 	}
-    ast_log(LOG_ERROR, "waitevent_exec: 487\n");
+
 	const char *variable_name = "tId_and_tsId";
     const char *variable_value = pbx_builtin_getvar_helper(chan, variable_name);
-    ast_log(LOG_ERROR, "waitevent_exec: 490 %s\n", variable_value);
+
 	double timeout = strtod(data, NULL);
 	struct timespec deadline;
 	clock_gettime(CLOCK_MONOTONIC_RAW, &deadline);
