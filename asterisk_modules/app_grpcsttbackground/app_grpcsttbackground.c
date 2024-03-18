@@ -169,7 +169,6 @@ struct thread_conf {
 	int interim_results_enable;
 	double interim_results_max_interval;
 	int interim_results_max_predictions;
-	char *interim_results_prediction_criteria;
 	int enable_gender_identification;
 };
 
@@ -196,7 +195,6 @@ static struct thread_conf dflt_thread_conf = {
 	.interim_results_enable = 0,
 	.interim_results_max_interval = 0.0,
 	.interim_results_max_predictions = 2,
-	.interim_results_prediction_criteria = NULL,
 	.enable_gender_identification = 0,
 };
 static ast_mutex_t dflt_thread_conf_mutex;
@@ -287,7 +285,6 @@ static struct thread_conf *make_thread_conf(const struct thread_conf *source)
 	conf->interim_results_enable = source->interim_results_enable;
 	conf->interim_results_max_interval = source->interim_results_max_interval;
 	conf->interim_results_max_predictions = source->interim_results_max_predictions;
-	conf->interim_results_prediction_criteria = source->interim_results_prediction_criteria;
 	conf->enable_gender_identification = source->enable_gender_identification;
 	return conf;
 }
@@ -302,7 +299,7 @@ static void *thread_start(struct thread_conf *conf)
 		     conf->vad_disable, conf->vad_min_speech_duration, conf->vad_max_speech_duration,
 		     conf->vad_silence_duration_threshold, conf->vad_silence_prob_threshold, conf->vad_aggressiveness,
 		     conf->interim_results_enable, conf->interim_results_max_interval, conf->interim_results_max_predictions,
-		     conf->interim_results_prediction_criteria, conf->enable_gender_identification);
+		     conf->enable_gender_identification);
 
 	close(conf->terminate_event_fd);
 	ast_channel_unref(chan);
@@ -341,7 +338,6 @@ static void clear_config(void)
 	dflt_thread_conf.interim_results_enable = 0;
 	dflt_thread_conf.interim_results_max_interval = 0.0;
 	dflt_thread_conf.interim_results_max_predictions = 0;
-	dflt_thread_conf.interim_results_prediction_criteria = 0;
 	dflt_thread_conf.enable_gender_identification = 0;
 }
 static int load_config(int reload)
@@ -427,8 +423,6 @@ static int load_config(int reload)
 					dflt_thread_conf.interim_results_max_interval = atof(var->value);
 				} else if (!strcasecmp(var->name, "max_predictions")) {
 					dflt_thread_conf.interim_results_max_predictions = atoi(var->value);
-				} else if (!strcasecmp(var->name, "prediction_criteria")) {
-					dflt_thread_conf.interim_results_prediction_criteria = ast_strdup(var->value);
 				} else {
 					ast_log(LOG_WARNING, "%s: Cat:%s. Unknown keyword %s at line %d of grpcstt.conf\n", app, cat, var->name, var->lineno);
 				}

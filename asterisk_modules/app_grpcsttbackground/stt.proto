@@ -127,7 +127,6 @@ message InterimResultsConfig { // Configuration of interim results.
   bool enable_interim_results = 1; // Flag to enable sending interim results. Disabled by default.
   float interval = 2; // Desired interval in seconds for sending interim results. Actual interval between interim results depends on service internals and is selected for optimal give out of relevant data.
   uint32 max_predictions = 3;
-  string prediction_criteria = 4;
 }
 
 message StreamingRecognitionConfig { // Recognition configuration using StreamingRecognition method. Must be sent as first message only.
