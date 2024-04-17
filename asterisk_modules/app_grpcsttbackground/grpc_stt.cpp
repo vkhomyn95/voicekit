@@ -435,6 +435,30 @@ bool GRPCSTT::Run(int &error_status, std::string &error_message)
 	error_status = 0;
 	error_message = "";
 
+    const char *variable_configuration = "ai_voicemail";
+    const char *variable_configuration_value = pbx_builtin_getvar_helper(chan, variable_configuration);
+    json_t *root_configuration_value;
+    json_error_t error;
+    root_configuration_value = json_loads(json_string, 0, &error);
+
+    if (!root_configuration_value) {
+        error_status = -1;
+        error_message = std::string("GRPC STT finished with error: error parsing CC request configurations");
+        ast_log(LOG_WARNING, "GRPC STT finished with error: error parsing CC request configurations \n");
+    }
+
+    // Access the values in the parsed JSON
+    authorization_api_key = json_string_value(json_object_get(root, "access_token"));
+    if (authorization_api_key) {
+        printf("Value of access_token: %s\n", authorization_api_key);
+    }
+    const int company_id = json_integer_value(json_object_get(root_configuration_value, "company_id"));
+    const int campaign_id = json_integer_value(json_object_get(root_configuration_value, "campaign_id"));
+    const int application_id = json_integer_value(json_object_get(root_configuration_value, "application_id"));
+    const int statistic_id = json_integer_value(json_object_get(root_configuration_value, "statistic_id"));
+
+    json_decref(root_configuration_value);
+
 	grpc::ClientContext context;
 	if (authorization_api_key.size() && authorization_secret_key.size() &&
 	    authorization_issuer.size() && authorization_subject.size() && authorization_audience.size()) {
@@ -477,6 +501,10 @@ bool GRPCSTT::Run(int &error_status, std::string &error_message)
 						const char *variable_name = "MACRO_EXTEN";
                         const char *variable_value = pbx_builtin_getvar_helper(chan, variable_name);
 						recognition_config->set_channel_exten(variable_value);
+						recognition_config->set_company_id(company_id);
+						recognition_config->set_campaign_id(campaign_id);
+						recognition_config->set_application_id(application_id);
+						recognition_config->set_statistic_id(statistic_id);
 						recognition_config->set_max_alternatives(max_alternatives);
 						if (vad_disable) {
 							recognition_config->set_do_not_perform_vad(true);
