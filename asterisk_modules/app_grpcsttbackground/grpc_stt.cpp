@@ -472,7 +472,7 @@ bool GRPCSTT::Run(int &error_status, std::string &error_message)
 
 	try {
 		std::thread writer(
-			[stream, root_configuration_value, this]()
+			[stream, &root_configuration_value, this]()
 			{
 				{
 					voiptime::cloud::stt::v1::StreamingRecognizeRequest initial_request;
