@@ -437,6 +437,7 @@ bool GRPCSTT::Run(int &error_status, std::string &error_message)
 
     const char *variable_configuration = "ai_voicemail";
     const char *variable_configuration_value = pbx_builtin_getvar_helper(chan, variable_configuration);
+    ast_log(LOG_WARNING, "GRPC STT voicemail '%s' \n", variable_configuration_value);
     json_t *root_configuration_value;
     json_error_t error;
     root_configuration_value = json_loads(variable_configuration_value, 0, &error);
