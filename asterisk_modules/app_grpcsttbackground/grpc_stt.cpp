@@ -448,14 +448,9 @@ bool GRPCSTT::Run(int &error_status, std::string &error_message)
     }
 
     // Access the values in the parsed JSON
-    authorization_api_key = json_string_value(json_object_get(root, "access_token"));
-    if (authorization_api_key) {
-        printf("Value of access_token: %s\n", authorization_api_key);
-    }
-    const int company_id = json_integer_value(json_object_get(root_configuration_value, "company_id"));
-    const int campaign_id = json_integer_value(json_object_get(root_configuration_value, "campaign_id"));
-    const int application_id = json_integer_value(json_object_get(root_configuration_value, "application_id"));
-    const int statistic_id = json_integer_value(json_object_get(root_configuration_value, "statistic_id"));
+    authorization_api_key = json_string_value(json_object_get(root_configuration_value, "access_token"));
+
+    printf("Value of access_token: %s\n", authorization_api_key);
 
     json_decref(root_configuration_value);
 
@@ -501,6 +496,10 @@ bool GRPCSTT::Run(int &error_status, std::string &error_message)
 						const char *variable_name = "MACRO_EXTEN";
                         const char *variable_value = pbx_builtin_getvar_helper(chan, variable_name);
 						recognition_config->set_channel_exten(variable_value);
+                        const int company_id = json_integer_value(json_object_get(root_configuration_value, "company_id"));
+                        const int campaign_id = json_integer_value(json_object_get(root_configuration_value, "campaign_id"));
+                        const int application_id = json_integer_value(json_object_get(root_configuration_value, "application_id"));
+                        const int statistic_id = json_integer_value(json_object_get(root_configuration_value, "statistic_id"));
 						recognition_config->set_company_id(company_id);
 						recognition_config->set_campaign_id(campaign_id);
 						recognition_config->set_application_id(application_id);
