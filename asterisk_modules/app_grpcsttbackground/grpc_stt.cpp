@@ -359,6 +359,27 @@ static void framehook_destroy_callback (void *data)
 	delete (std::shared_ptr<GRPCSTT>*) data;
 }
 
+const char *get_voiptime_value_for_key(const char *input, const char *key) {
+    const char *pos = input;
+    size_t key_length = std::strlen(key);
+    while (*pos != '\0') {
+        const char *semicolon_pos = std::strchr(pos, ';');
+        if (semicolon_pos == nullptr) {
+            semicolon_pos = pos + std::strlen(pos);
+        }
+        std::string pair(pos, semicolon_pos - pos);
+        size_t colon_pos = pair.find(':');
+        if (colon_pos != std::string::npos) {
+            std::string current_key = pair.substr(0, colon_pos);
+            std::string value = pair.substr(colon_pos + 1);
+            if (current_key == key) {
+                return value.c_str();
+            }
+        }
+        pos = semicolon_pos + 1;
+    }
+    return nullptr;
+}
 
 void GRPCSTT::AttachToChannel(std::shared_ptr<GRPCSTT> &grpc_stt)
 {
@@ -437,16 +458,18 @@ bool GRPCSTT::Run(int &error_status, std::string &error_message)
 
     const char *variable_configuration = "ai_voicemail";
     const char *variable_configuration_value = pbx_builtin_getvar_helper(chan, variable_configuration);
-    ast_log(LOG_WARNING, "GRPC STT voicemail '%s' \n", variable_configuration_value);
-    json_t *root_configuration_value;
-    json_error_t error;
-    root_configuration_value = json_loads(variable_configuration_value, 0, &error);
 
-    if (!root_configuration_value) {
-        error_status = -1;
-        error_message = std::string("GRPC STT finished with error: error parsing CC request configurations");
-        ast_log(LOG_WARNING, "GRPC STT finished with error: error parsing CC request configurations \n");
-    }
+    ast_log(LOG_WARNING, "GRPC STT voicemail '%s' \n", variable_configuration_value);
+    authorization_api_key = get_voiptime_value_for_key(variable_configuration_value, "access_token");
+//    json_t *root_configuration_value;
+//    json_error_t error;
+//    root_configuration_value = json_loads(variable_configuration_value, 0, &error);
+//
+//    if (!root_configuration_value) {
+//        error_status = -1;
+//        error_message = std::string("GRPC STT finished with error: error parsing CC request configurations");
+//        ast_log(LOG_WARNING, "GRPC STT finished with error: error parsing CC request configurations \n");
+//    }
 
     // Access the values in the parsed JSON
     authorization_api_key = json_string_value(json_object_get(root_configuration_value, "access_token"));
@@ -497,10 +520,10 @@ bool GRPCSTT::Run(int &error_status, std::string &error_message)
 						const char *variable_name = "MACRO_EXTEN";
                         const char *variable_value = pbx_builtin_getvar_helper(chan, variable_name);
 						recognition_config->set_channel_exten(variable_value);
-                        const int company_id = json_integer_value(json_object_get(root_configuration_value, "company_id"));
-                        const int campaign_id = json_integer_value(json_object_get(root_configuration_value, "campaign_id"));
-                        const int application_id = json_integer_value(json_object_get(root_configuration_value, "application_id"));
-                        const int statistic_id = json_integer_value(json_object_get(root_configuration_value, "statistic_id"));
+						const int company_id = atoi(get_voiptime_value_for_key(variable_configuration_value, "company_id"));
+                        const int campaign_id = atoi(get_voiptime_value_for_key(variable_configuration_value, "campaign_id"));
+                        const int application_id = atoi(get_voiptime_value_for_key(variable_configuration_value, "application_id"));
+                        const int statistic_id = atoi(get_voiptime_value_for_key(variable_configuration_value, "statistic_id"));
 						recognition_config->set_company_id(company_id);
 						recognition_config->set_campaign_id(campaign_id);
 						recognition_config->set_application_id(application_id);
