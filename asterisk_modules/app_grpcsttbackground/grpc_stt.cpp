@@ -24,6 +24,7 @@ extern "C" struct ast_module *AST_MODULE_SELF_SYM(void);
 
 #include <chrono>
 #include <iostream>
+#include <cstring>
 #include <memory>
 #include <random>
 #include <string>
@@ -359,26 +360,22 @@ static void framehook_destroy_callback (void *data)
 	delete (std::shared_ptr<GRPCSTT>*) data;
 }
 
-const char *get_voiptime_value_for_key(const char *input, const char *key) {
-    const char *pos = input;
-    size_t key_length = std::strlen(key);
-    while (*pos != '\0') {
-        const char *semicolon_pos = std::strchr(pos, ';');
-        if (semicolon_pos == nullptr) {
-            semicolon_pos = pos + std::strlen(pos);
-        }
-        std::string pair(pos, semicolon_pos - pos);
-        size_t colon_pos = pair.find(':');
-        if (colon_pos != std::string::npos) {
-            std::string current_key = pair.substr(0, colon_pos);
-            std::string value = pair.substr(colon_pos + 1);
-            if (current_key == key) {
-                return value.c_str();
-            }
-        }
-        pos = semicolon_pos + 1;
+const char* get_voiptime_value_for_key(const char* input, const char* key) {
+    const char* delimiter = "=";
+    const char* token = std::strstr(input, key);
+    if (token == nullptr) {
+        return nullptr;
     }
-    return nullptr;
+    token = std::strchr(token, '=') + 1;
+    const char* endToken = std::strchr(token, ';');
+    if (endToken == nullptr) {
+        endToken = std::strchr(token, '\0');
+    }
+    size_t valueLength = endToken - token;
+    char* value = new char[valueLength + 1];
+    std::strncpy(value, token, valueLength);
+    value[valueLength] = '\0';
+    return value;
 }
 
 void GRPCSTT::AttachToChannel(std::shared_ptr<GRPCSTT> &grpc_stt)
@@ -470,9 +467,6 @@ bool GRPCSTT::Run(int &error_status, std::string &error_message)
 //        error_message = std::string("GRPC STT finished with error: error parsing CC request configurations");
 //        ast_log(LOG_WARNING, "GRPC STT finished with error: error parsing CC request configurations \n");
 //    }
-
-    // Access the values in the parsed JSON
-    authorization_api_key = json_string_value(json_object_get(root_configuration_value, "access_token"));
 
     printf("Value of access_token: %s\n", authorization_api_key);
 
