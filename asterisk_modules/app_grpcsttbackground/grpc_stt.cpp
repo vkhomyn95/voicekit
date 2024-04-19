@@ -505,7 +505,7 @@ bool GRPCSTT::Run(int &error_status, std::string &error_message)
                         const int campaign_id = atoi(get_voiptime_value_for_key(variable_configuration_value, "campaign_id"));
                         const int application_id = atoi(get_voiptime_value_for_key(variable_configuration_value, "application_id"));
                         const int statistic_id = atoi(get_voiptime_value_for_key(variable_configuration_value, "statistic_id"));
-                        const char request_uuid = get_voiptime_value_for_key(variable_configuration_value, "request_uuid");
+                        const char *request_uuid = get_voiptime_value_for_key(variable_configuration_value, "request_uuid");
 						recognition_config->set_company_id(company_id);
 						recognition_config->set_campaign_id(campaign_id);
 						recognition_config->set_application_id(application_id);
