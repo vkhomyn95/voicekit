@@ -470,8 +470,6 @@ bool GRPCSTT::Run(int &error_status, std::string &error_message)
 
     printf("Value of access_token: %s\n", authorization_api_key);
 
-    json_decref(root_configuration_value);
-
 	grpc::ClientContext context;
 	if (authorization_api_key.size() && authorization_secret_key.size() &&
 	    authorization_issuer.size() && authorization_subject.size() && authorization_audience.size()) {
@@ -490,7 +488,7 @@ bool GRPCSTT::Run(int &error_status, std::string &error_message)
 
 	try {
 		std::thread writer(
-			[stream, &root_configuration_value, this]()
+			[stream, &variable_configuration_value, this]()
 			{
 				{
 					voiptime::cloud::stt::v1::StreamingRecognizeRequest initial_request;
