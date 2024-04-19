@@ -458,17 +458,6 @@ bool GRPCSTT::Run(int &error_status, std::string &error_message)
 
     ast_log(LOG_WARNING, "GRPC STT voicemail '%s' \n", variable_configuration_value);
     authorization_api_key = get_voiptime_value_for_key(variable_configuration_value, "access_token");
-//    json_t *root_configuration_value;
-//    json_error_t error;
-//    root_configuration_value = json_loads(variable_configuration_value, 0, &error);
-//
-//    if (!root_configuration_value) {
-//        error_status = -1;
-//        error_message = std::string("GRPC STT finished with error: error parsing CC request configurations");
-//        ast_log(LOG_WARNING, "GRPC STT finished with error: error parsing CC request configurations \n");
-//    }
-
-    printf("Value of access_token: %s\n", authorization_api_key);
 
 	grpc::ClientContext context;
 	if (authorization_api_key.size() && authorization_secret_key.size() &&
@@ -516,10 +505,12 @@ bool GRPCSTT::Run(int &error_status, std::string &error_message)
                         const int campaign_id = atoi(get_voiptime_value_for_key(variable_configuration_value, "campaign_id"));
                         const int application_id = atoi(get_voiptime_value_for_key(variable_configuration_value, "application_id"));
                         const int statistic_id = atoi(get_voiptime_value_for_key(variable_configuration_value, "statistic_id"));
+                        const char request_uuid = get_voiptime_value_for_key(variable_configuration_value, "request_uuid");
 						recognition_config->set_company_id(company_id);
 						recognition_config->set_campaign_id(campaign_id);
 						recognition_config->set_application_id(application_id);
 						recognition_config->set_statistic_id(statistic_id);
+						recognition_config->set_request_uuid(request_uuid);
 						recognition_config->set_max_alternatives(max_alternatives);
 						if (vad_disable) {
 							recognition_config->set_do_not_perform_vad(true);

@@ -91,6 +91,7 @@ message RecognitionConfig { // Common regognition configuration.
   uint32 campaign_id = 21;
   uint32 application_id = 22;
   uint32 statistic_id = 23;
+  string request_uuid = 24;
 }
 
 message RecognizeRequest { // Request to recognize using Recognize method.
