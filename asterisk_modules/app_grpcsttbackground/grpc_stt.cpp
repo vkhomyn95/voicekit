@@ -111,7 +111,7 @@ static std::string build_grpcstt_event(struct ast_channel *chan, const voiptime:
 {
 	const voiptime::cloud::stt::v1::SpeechRecognitionResult &recognition_result = stream_result.recognition_result();
 	json_t *json_root = json_object();
-	const char *variable_name = "tId_and_tsId";
+	const char *variable_name = "ai_voicemail";
     const char *variable_value = pbx_builtin_getvar_helper(chan, variable_name);
 	{
 		json_t *json_alternatives = json_array();
@@ -126,7 +126,7 @@ static std::string build_grpcstt_event(struct ast_channel *chan, const voiptime:
 	json_object_set_new_nocheck(json_root, "is_final", json_boolean(stream_result.is_final()));
 	json_object_set_new_nocheck(json_root, "stability", json_real(stream_result.stability()));
     json_object_set_new_nocheck(json_root, "request_uuid", json_string(stream_result.request_uuid().c_str()));
-    json_object_set_new_nocheck(json_root, "tId_and_tsId", json_string(variable_value));
+    json_object_set_new_nocheck(json_root, "configuration", json_string(variable_value));
 	json_object_set_new_nocheck(json_root, "start_time", build_json_duration(recognition_result.start_time()));
 	json_object_set_new_nocheck(json_root, "end_time", build_json_duration(recognition_result.end_time()));
 

@@ -422,7 +422,7 @@ static inline void read_out_frames(struct ast_channel *chan)
 void push_session_finished_event(struct ast_channel *chan, int error_code, const char *error_message, const char *identifiers)
 {
 	char data[4096];
-    snprintf(data, sizeof(data), "{\"status\": \"FAILURE\", \"code\": %d, \"message\": \"%s\", \"tId_and_tsId\": \"%s\"}", error_code, error_message, identifiers);
+    snprintf(data, sizeof(data), "{\"status\": \"FAILURE\", \"code\": %d, \"message\": \"%s\", \"configuration\": \"%s\"}", error_code, error_message, identifiers);
     struct ast_json *blob = ast_json_pack("{s: s, s: s}", "eventname", "SpeechSession", "eventbody", data);
     if (!blob)
         return;
@@ -485,7 +485,7 @@ static int waitevent_exec(struct ast_channel *chan, const char *data)
 			return -1;
 	}
 
-	const char *variable_name = "tId_and_tsId";
+	const char *variable_name = "configuration";
     const char *variable_value = pbx_builtin_getvar_helper(chan, variable_name);
 
 	double timeout = strtod(data, NULL);
