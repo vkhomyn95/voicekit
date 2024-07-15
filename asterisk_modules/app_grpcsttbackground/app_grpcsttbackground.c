@@ -201,6 +201,26 @@ static ast_mutex_t dflt_thread_conf_mutex;
 
 #define MAX_INMEMORY_FILE_SIZE (256*1024*1024)
 
+const char* get_voiptime_value_for_key(const char* input, const char* key) {
+    const char* token = strstr(input, key);
+    if (token == nullptr) {
+        return nullptr;
+    }
+    token = strchr(token, '=') + 1;
+    const char* endToken = strchr(token, ';');
+    if (endToken == nullptr) {
+        endToken = strchr(token, '\0');
+    }
+    size_t valueLength = endToken - token;
+    char* value = ast_malloc(valueLength + 1);
+    if (value == nullptr) {
+        return nullptr;
+    }
+    strncpy(value, token, valueLength);
+    value[valueLength] = '\0';
+    return value;
+}
+
 static char *load_ca_from_file(const char *relative_fname)
 {
 	char fname[512];
@@ -563,6 +583,16 @@ static int grpcsttbackground_exec(struct ast_channel *chan, const char *data)
 
 	if (args.endpoint && *args.endpoint)
 		thread_conf.endpoint = args.endpoint;
+
+    const char *variable_configuration = "ai_voicemail";
+    const char *variable_configuration_value = pbx_builtin_getvar_helper(chan, variable_configuration);
+    const char* host_str = get_voiptime_value_for_key(variable_configuration_value, "host");
+    const char* port_str = get_voiptime_value_for_key(variable_configuration_value, "port");
+    ast_log(LOG_ERROR, "%s: ==============\n", host_str);
+    ast_log(LOG_ERROR, "%s: ==============\n", port_str);
+    size_t result_host_port_length = strlen(host_str) + 1 + strlen(port_str) + 1;
+    char *result_host_port = (char *)malloc(result_host_port_length);
+    ast_log(LOG_ERROR, "%s: ==============\n", result_host_port);
 
 	if (!thread_conf.endpoint) {
 		ast_log(LOG_ERROR, "%s: Failed to execute application: no endpoint specified\n", app);
