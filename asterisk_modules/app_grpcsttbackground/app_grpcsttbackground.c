@@ -203,18 +203,18 @@ static ast_mutex_t dflt_thread_conf_mutex;
 
 const char* get_voiptime_value_for_key(const char* input, const char* key) {
     const char* token = strstr(input, key);
-    if (token == nullptr) {
-        return nullptr;
+    if (!token) {
+        return NULL;
     }
     token = strchr(token, '=') + 1;
     const char* endToken = strchr(token, ';');
-    if (endToken == nullptr) {
+    if (!endToken) {
         endToken = strchr(token, '\0');
     }
     size_t valueLength = endToken - token;
     char* value = ast_malloc(valueLength + 1);
-    if (value == nullptr) {
-        return nullptr;
+    if (!value) {
+        return NULL;
     }
     strncpy(value, token, valueLength);
     value[valueLength] = '\0';
@@ -591,7 +591,7 @@ static int grpcsttbackground_exec(struct ast_channel *chan, const char *data)
     ast_log(LOG_ERROR, "%s: ==============\n", host_str);
     ast_log(LOG_ERROR, "%s: ==============\n", port_str);
     size_t result_host_port_length = strlen(host_str) + 1 + strlen(port_str) + 1;
-    char *result_host_port = (char *)malloc(result_host_port_length);
+    char *result_host_port = (char *)ast_malloc(result_host_port_length);
     ast_log(LOG_ERROR, "%s: ==============\n", result_host_port);
 
 	if (!thread_conf.endpoint) {
