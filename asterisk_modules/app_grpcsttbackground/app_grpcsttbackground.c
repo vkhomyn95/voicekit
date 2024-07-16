@@ -590,11 +590,15 @@ static int grpcsttbackground_exec(struct ast_channel *chan, const char *data)
     const char* host_port_delimiter = ":";
     const char* port_str = get_voiptime_value_for_key(variable_configuration_value, "port");
 
-    char *result_host_port = (char *)ast_malloc(strlen(host_str) + 1 + strlen(port_str) + 1);
+    size_t result_length = strlen(host_str) + strlen(host_port_delimiter) + strlen(port_str) + 1;
+    char *result_host_port = (char *)ast_malloc(result_length);
+
     strcpy(result_host_port, host_str);
-    strcpy(result_host_port, host_port_delimiter);
-    strcpy(result_host_port, port_str);
+    strcat(result_host_port, host_port_delimiter);
+    strcat(result_host_port, port_str);
+
     ast_log(LOG_ERROR, "%s: ==============\n", result_host_port);
+
     if (result_host_port) {
         thread_conf.endpoint = result_host_port;
     }
