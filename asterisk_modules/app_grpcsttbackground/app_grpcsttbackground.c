@@ -587,10 +587,12 @@ static int grpcsttbackground_exec(struct ast_channel *chan, const char *data)
     const char *variable_configuration = "ai_voicemail";
     const char *variable_configuration_value = pbx_builtin_getvar_helper(chan, variable_configuration);
     const char* host_str = get_voiptime_value_for_key(variable_configuration_value, "host");
+    const char* host_port_delimiter = ":";
     const char* port_str = get_voiptime_value_for_key(variable_configuration_value, "port");
 
-    char *result_host_port = (char *)ast_malloc(strlen(host_str) + strlen(port_str) + 1);
+    char *result_host_port = (char *)ast_malloc(strlen(host_str) + 1 + strlen(port_str) + 1);
     strcpy(result_host_port, host_str);
+    strcpy(result_host_port, host_port_delimiter);
     strcpy(result_host_port, port_str);
     ast_log(LOG_ERROR, "%s: ==============\n", result_host_port);
     if (result_host_port) {
