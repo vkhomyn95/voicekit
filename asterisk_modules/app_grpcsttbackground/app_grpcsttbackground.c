@@ -588,14 +588,17 @@ static int grpcsttbackground_exec(struct ast_channel *chan, const char *data)
     const char *variable_configuration_value = pbx_builtin_getvar_helper(chan, variable_configuration);
     const char* host_str = get_voiptime_value_for_key(variable_configuration_value, "host");
     const char* port_str = get_voiptime_value_for_key(variable_configuration_value, "port");
-    ast_log(LOG_ERROR, "%s: ==============\n", host_str);
-    ast_log(LOG_ERROR, "%s: ==============\n", port_str);
-    size_t result_host_port_length = strlen(host_str) + 1 + strlen(port_str) + 1;
-    char *result_host_port = (char *)ast_malloc(result_host_port_length);
+
+    char *result_host_port = (char *)ast_malloc(strlen(host_str) + strlen(port_str) + 1);
+    strcpy(result_host_port, host_str);
+    strcpy(result_host_port, port_str);
     ast_log(LOG_ERROR, "%s: ==============\n", result_host_port);
+    if (result_host_port) {
+        thread_conf.endpoint = result_host_port;
+    }
 
 	if (!thread_conf.endpoint) {
-		ast_log(LOG_ERROR, "%s: Failed to execute application: no endpoint specified\n", app);
+		ast_log(LOG_ERROR, "%s: Failed to execute application: no endpoint (host:port) specified\n", app);
 		ast_mutex_unlock(&dflt_thread_conf_mutex);
 		return -1;
 	}

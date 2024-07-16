@@ -456,7 +456,6 @@ bool GRPCSTT::Run(int &error_status, std::string &error_message)
     const char *variable_configuration = "ai_voicemail";
     const char *variable_configuration_value = pbx_builtin_getvar_helper(chan, variable_configuration);
 
-    ast_log(LOG_WARNING, "GRPC STT voicemail '%s' \n", variable_configuration_value);
     authorization_api_key = get_voiptime_value_for_key(variable_configuration_value, "access_token");
 
 	grpc::ClientContext context;
