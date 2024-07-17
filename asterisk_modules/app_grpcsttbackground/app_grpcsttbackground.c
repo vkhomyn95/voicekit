@@ -597,8 +597,6 @@ static int grpcsttbackground_exec(struct ast_channel *chan, const char *data)
     strcat(result_host_port, host_port_delimiter);
     strcat(result_host_port, port_str);
 
-    ast_log(LOG_ERROR, "%s: ==============\n", result_host_port);
-
     if (result_host_port) {
         thread_conf.endpoint = result_host_port;
     }
