@@ -485,7 +485,7 @@ static int waitevent_exec(struct ast_channel *chan, const char *data)
 			return -1;
 	}
 
-	const char *variable_name = "configuration";
+	const char *variable_name = "ai_voicemail";
     const char *variable_value = pbx_builtin_getvar_helper(chan, variable_name);
 
 	double timeout = strtod(data, NULL);
