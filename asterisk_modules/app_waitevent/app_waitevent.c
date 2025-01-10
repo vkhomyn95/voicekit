@@ -515,7 +515,7 @@ static int waitevent_exec(struct ast_channel *chan, const char *data)
 		if (ret < 0) {
 			set_fail_status(chan, "POLL_ERROR");
 			ast_log(AST_LOG_WARNING, "Failed to poll for channel FDs: %s, ret code: %d\n", strerror(errno), ret);
-			push_session_finished_event(chan, ret, "poll error", variable_value);
+//			push_session_finished_event(chan, ret, "poll error", variable_value);
 			return 0;
 		}
 		if (ret == 2) {
